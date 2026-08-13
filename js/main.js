@@ -241,7 +241,266 @@ function initStoryVideos() {
 }
 
 /* ───────────────────────────────────────────────────────────
-   7. Mailing-list placeholder
+   7. Shop — Printful catalog + cart
+
+   Products load from /api/products (a serverless proxy in front of
+   Printful, keeping the API token server-side). The cart itself is
+   just localStorage; checkout hands the cart to /api/create-checkout-
+   session, which builds a Stripe Checkout Session and returns its
+   hosted URL — the browser is redirected there directly, so no
+   Stripe.js or publishable key is needed on this page at all.
+   ─────────────────────────────────────────────────────────── */
+
+const CART_KEY = 'merlow-cart-v1';
+
+let shopCatalog = [];
+let cart = loadCart();
+
+function loadCart() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveCart() {
+  localStorage.setItem(CART_KEY, JSON.stringify(cart));
+}
+
+function money(amount, currency) {
+  try {
+    return new Intl.NumberFormat('en-GB', { style: 'currency', currency }).format(amount);
+  } catch {
+    return `${amount.toFixed(2)} ${currency}`;
+  }
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+}
+
+function findVariant(variantId) {
+  for (const product of shopCatalog) {
+    const variant = product.variants.find((v) => v.id === variantId);
+    if (variant) return { product, variant };
+  }
+  return null;
+}
+
+function addToCart(variantId, quantity) {
+  const existing = cart.find((item) => item.variantId === variantId);
+  if (existing) {
+    existing.quantity = Math.min(10, existing.quantity + quantity);
+  } else {
+    cart.push({ variantId, quantity });
+  }
+  saveCart();
+  renderCart();
+  openCart();
+}
+
+function removeFromCart(variantId) {
+  cart = cart.filter((item) => item.variantId !== variantId);
+  saveCart();
+  renderCart();
+}
+
+function setQuantity(variantId, quantity) {
+  if (quantity < 1) return removeFromCart(variantId);
+  const item = cart.find((i) => i.variantId === variantId);
+  if (!item) return;
+  item.quantity = Math.min(10, quantity);
+  saveCart();
+  renderCart();
+}
+
+function renderProductCard(product) {
+  const variants = product.variants || [];
+  const image = product.thumbnail || (variants[0] && variants[0].image) || '';
+  const options = variants
+    .map((v) => `<option value="${v.id}">${escapeHtml(v.name)} — ${money(v.price, v.currency)}</option>`)
+    .join('');
+
+  return `
+    <li class="shop__item reveal">
+      <span class="shop__media">
+        ${image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async">` : ''}
+      </span>
+      <span class="shop__meta">
+        <span class="shop__name">${escapeHtml(product.name)}</span>
+      </span>
+      ${variants.length ? `
+        <form class="shop__form" data-add-to-cart="${product.id}">
+          <label class="shop__label" for="variant-${product.id}">Size / option</label>
+          <select class="shop__select" id="variant-${product.id}" required>
+            <option value="" disabled selected>Choose an option</option>
+            ${options}
+          </select>
+          <button class="btn btn--line shop__add" type="submit">Add to cart</button>
+        </form>` : `<p class="shop__note">Currently unavailable</p>`}
+    </li>`;
+}
+
+async function loadShop() {
+  const grid = document.getElementById('shopGrid');
+  if (!grid) return;
+
+  try {
+    const res = await fetch('/api/products');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    shopCatalog = Array.isArray(data.products) ? data.products : [];
+
+    if (!shopCatalog.length) {
+      grid.innerHTML = '<li class="shop__status reveal">The shop is being stocked — check back soon.</li>';
+      return;
+    }
+
+    grid.innerHTML = shopCatalog.map(renderProductCard).join('');
+    grid.querySelectorAll('[data-add-to-cart]').forEach((form) => {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const select = form.querySelector('select');
+        const variantId = Number(select.value);
+        if (!variantId) return;
+        addToCart(variantId, 1);
+      });
+    });
+    renderCart();
+  } catch (err) {
+    grid.innerHTML = '<li class="shop__status reveal">Couldn&rsquo;t load the shop right now — refresh to try again.</li>';
+  }
+}
+
+function renderCart() {
+  const countEl = document.getElementById('cartCount');
+  const itemsEl = document.getElementById('cartItems');
+  const totalEl = document.getElementById('cartTotal');
+  const toggleEl = document.getElementById('cartToggle');
+  const checkoutBtn = document.getElementById('cartCheckout');
+  if (!itemsEl) return;
+
+  const count = cart.reduce((sum, i) => sum + i.quantity, 0);
+  if (countEl) countEl.textContent = String(count);
+  if (toggleEl) toggleEl.hidden = count === 0;
+
+  if (!cart.length) {
+    itemsEl.innerHTML = '<li class="cart__empty">Your cart is empty.</li>';
+    if (totalEl) totalEl.textContent = '—';
+    if (checkoutBtn) checkoutBtn.disabled = true;
+    return;
+  }
+
+  let total = 0;
+  let currency = 'GBP';
+  itemsEl.innerHTML = cart.map((item) => {
+    const found = findVariant(item.variantId);
+    if (!found) return '';
+    const { product, variant } = found;
+    total += variant.price * item.quantity;
+    currency = variant.currency || currency;
+    return `
+      <li class="cart__item" data-variant="${variant.id}">
+        <span class="cart__item-name">${escapeHtml(product.name)} — ${escapeHtml(variant.name)}</span>
+        <span class="cart__item-qty">
+          <button type="button" data-qty="-1" aria-label="Decrease quantity">&minus;</button>
+          <span>${item.quantity}</span>
+          <button type="button" data-qty="1" aria-label="Increase quantity">+</button>
+        </span>
+        <span class="cart__item-price">${money(variant.price * item.quantity, variant.currency)}</span>
+        <button type="button" class="cart__item-remove" data-remove aria-label="Remove item">&times;</button>
+      </li>`;
+  }).join('');
+
+  itemsEl.querySelectorAll('[data-qty]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const variantId = Number(btn.closest('.cart__item').dataset.variant);
+      const item = cart.find((i) => i.variantId === variantId);
+      if (item) setQuantity(variantId, item.quantity + Number(btn.dataset.qty));
+    });
+  });
+  itemsEl.querySelectorAll('[data-remove]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      removeFromCart(Number(btn.closest('.cart__item').dataset.variant));
+    });
+  });
+
+  if (totalEl) totalEl.textContent = money(total, currency);
+  if (checkoutBtn) checkoutBtn.disabled = false;
+}
+
+function openCart() {
+  const drawer = document.getElementById('cartDrawer');
+  if (drawer) drawer.hidden = false;
+}
+
+function closeCart() {
+  const drawer = document.getElementById('cartDrawer');
+  if (drawer) drawer.hidden = true;
+}
+
+function handleOrderReturn() {
+  const params = new URLSearchParams(window.location.search);
+  const status = params.get('order');
+  if (!status) return;
+
+  const note = document.getElementById('cartNote');
+  if (status === 'success') {
+    cart = [];
+    saveCart();
+    if (note) note.textContent = 'Thanks — your order is confirmed. A receipt is on its way to your email.';
+    openCart();
+  } else if (note) {
+    note.textContent = 'Checkout was cancelled — your cart is still here.';
+  }
+
+  history.replaceState(null, '', window.location.pathname + window.location.hash);
+}
+
+function initCart() {
+  const toggle = document.getElementById('cartToggle');
+  const close = document.getElementById('cartClose');
+  const checkout = document.getElementById('cartCheckout');
+  const note = document.getElementById('cartNote');
+
+  if (toggle) toggle.addEventListener('click', openCart);
+  if (close) close.addEventListener('click', closeCart);
+
+  if (checkout) {
+    checkout.addEventListener('click', async () => {
+      if (!cart.length) return;
+      checkout.disabled = true;
+      checkout.textContent = 'Redirecting…';
+      if (note) note.textContent = '';
+      try {
+        const res = await fetch('/api/create-checkout-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items: cart.map((i) => ({ variantId: i.variantId, quantity: i.quantity })),
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.url) throw new Error(data.error || 'Checkout failed');
+        window.location.href = data.url;
+      } catch (err) {
+        if (note) note.textContent = 'Couldn’t start checkout — try again in a moment.';
+        checkout.disabled = false;
+        checkout.textContent = 'Checkout';
+      }
+    });
+  }
+
+  handleOrderReturn();
+  renderCart();
+}
+
+/* ───────────────────────────────────────────────────────────
+   8. Mailing-list placeholder
    ─────────────────────────────────────────────────────────── */
 
 function initSignup() {
@@ -267,6 +526,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initReveal();
   initHeroVideo();
   initStoryVideos();
+  initCart();
+  loadShop();
   initSignup();
 
   const year = document.getElementById('year');

@@ -1,0 +1,9 @@
+{
+  "name": "merlow-unfiltered-site",
+  "private": true,
+  "version": "1.0.0",
+  "description": "MERLOW: UNFILTERED — static site + Printful/Stripe serverless API",
+  "dependencies": {
+    "stripe": "^16.0.0"
+  }
+}

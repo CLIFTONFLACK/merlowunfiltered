@@ -64,7 +64,7 @@ Everything in `media/` is a resized copy — the originals are untouched in
 | `story-01..02.mp4` + `.jpg` | the two story clips and their poster frames — silent loops, `preload="none"`, started only when the band scrolls into view | `Clips/clips_Seedance/clip_01, 03` |
 | `merch-lion.jpg`, `merch-britain.jpg` | the two shop products | `T-Shirt Mockups/UnUnUn_Tshirt_Lion.png`, `..._Britain.png` |
 | `plate.jpg` | faint texture behind the chorus | `Design Mockups/UnUnUn_good.png` |
-| `mark.png`, `favicon.png` | nav mark and tab icon | `M Logo.png` |
+| `favicon.png` (256), `favicon-180.png`, `favicon-32.png` | tab icon and apple-touch icon: the M mark with the studio background keyed out to transparency and cropped to the mark | `M Logo.png` |
 
 The hero video must stay **silent** — browsers refuse to autoplay a clip with an audio
 track, and the page would fall back to the poster image.
@@ -76,13 +76,55 @@ track, and the page would fall back to the poster image.
   ConvertKit when you have an account.
 - **Social links**: the four icons in the footer are `href="#"`. Replace with the real
   Spotify / YouTube / Instagram / Apple Music URLs in `index.html`.
-- **Shop links**: both product cards in the Shop section are `href="#"`, and the section
-  says so on the page. Point the two `.shop__link` hrefs at the real store and delete the
-  `.shop__pending` paragraph.
+
+## Shop — Printful + Stripe
+
+The Shop section is no longer static. `js/main.js` fetches the live catalog from
+`/api/products` (a serverless function that proxies Printful, so the API token never
+reaches the browser) and renders each synced product with a size/option picker and an
+Add to cart button. The cart itself is `localStorage`. Checkout posts the cart to
+`/api/create-checkout-session`, which re-prices everything against Printful server-side,
+creates a Stripe Checkout Session, and returns its hosted URL — the browser is redirected
+there directly, so there's no Stripe.js on this page. `/api/webhook` listens for
+`checkout.session.completed` and creates the matching order in Printful.
+
+```
+lib/printful.js               shared Printful API client
+api/products.js               GET  — catalog for the frontend
+api/create-checkout-session.js POST — cart in, Stripe Checkout URL out
+api/webhook.js                POST — Stripe -> Printful order creation
+```
+
+**Required Vercel environment variables:**
+
+| Variable | Where it comes from |
+|---|---|
+| `PRINTFUL_API_TOKEN` | Printful → Stores → your API-type store → Settings → API |
+| `PRINTFUL_STORE_ID` | Only needed for an account-level token from developers.printful.com that can see more than one store |
+| `STRIPE_SECRET_KEY` | Stripe dashboard → Developers → API keys |
+| `STRIPE_WEBHOOK_SECRET` | Created after deploy — see below |
+
+**Wiring up the Stripe webhook** (needs a live URL, so do this after the first deploy):
+
+1. Stripe dashboard → Developers → Webhooks → Add endpoint.
+2. Endpoint URL: `https://merlowunfiltered.vercel.app/api/webhook`.
+3. Event to send: `checkout.session.completed`.
+4. Copy the signing secret it gives you into the `STRIPE_WEBHOOK_SECRET` env var in Vercel,
+   then redeploy.
+
+**Orders start as drafts.** `api/webhook.js` has `AUTO_CONFIRM_ORDERS = false` at the top —
+paid orders land in Printful unconfirmed, so nothing gets produced or charged to your
+Printful account automatically. Confirm them by hand in the Printful dashboard until
+you've watched a few go through end to end, then flip that flag to `true` to auto-confirm
+on payment.
 
 ## Previewing locally
 
-Opening `index.html` directly works. To serve it properly:
+The static page opens fine on its own (`index.html` directly, or the Python server
+below), but the Shop section needs the `/api/*` serverless functions, which only run
+under Vercel — plain `http.server` will 404 on `/api/products`. Use `vercel dev` from
+this folder to preview the full site including checkout, or deploy to a Vercel preview
+branch.
 
 ```bash
 python -m http.server 5599 --directory Website

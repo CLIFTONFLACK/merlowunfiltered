@@ -6,7 +6,9 @@
 <title>MERLOW: UNFILTERED</title>
 <meta name="description" content="MERLOW. UNFILTERED, the debut collaborative album. One song, fifteen collaborations, one shared voice.">
 <meta name="theme-color" content="#0A0B0D">
-<link rel="icon" href="media/favicon.png" type="image/png">
+<link rel="icon" href="media/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="media/favicon.png" sizes="256x256" type="image/png">
+<link rel="apple-touch-icon" href="media/favicon-180.png">
 
 <meta property="og:type" content="music.album">
 <meta property="og:title" content="MERLOW: UNFILTERED">
@@ -167,32 +169,32 @@
     <h2 class="section-title reveal">Wear it out loud</h2>
     <p class="section-lede reveal">The three words, printed heavy on heavyweight cotton. Same thing the record says, in a form you can walk down the street in.</p>
 
-    <ul class="shop__grid">
-      <li class="shop__item reveal">
-        <a class="shop__link" href="#">
-          <span class="shop__media">
-            <img src="media/merch-lion.jpg" alt="Black t-shirt printed UN-FILTERED. UN-CENSORED. UN-APOLOGETIC. above a lion's head." width="1100" height="826" loading="lazy" decoding="async">
-          </span>
-          <span class="shop__meta">
-            <span class="shop__name">The Lion Tee</span>
-            <span class="shop__note">Black, heavyweight cotton</span>
-          </span>
-        </a>
-      </li>
-      <li class="shop__item reveal">
-        <a class="shop__link" href="#">
-          <span class="shop__media">
-            <img src="media/merch-britain.jpg" alt="Black t-shirt printed UN-FILTERED. UN-CENSORED. UN-APOLOGETIC. above a weathered Union flag." width="1100" height="826" loading="lazy" decoding="async">
-          </span>
-          <span class="shop__meta">
-            <span class="shop__name">The Britain Tee</span>
-            <span class="shop__note">Black, heavyweight cotton</span>
-          </span>
-        </a>
-      </li>
+    <ul class="shop__grid" id="shopGrid" aria-live="polite">
+      <li class="shop__status reveal">Loading the shop&hellip;</li>
     </ul>
+  </div>
 
-    <p class="shop__pending reveal">Store links are not live yet. Send the shop URL and these go straight through to it.</p>
+  <button class="cart__toggle" id="cartToggle" type="button" aria-haspopup="dialog" aria-controls="cartDrawer" hidden>
+    <span class="cart__toggle-label">Cart</span>
+    <span class="cart__count" id="cartCount">0</span>
+  </button>
+
+  <div class="cart" id="cartDrawer" role="dialog" aria-modal="true" aria-labelledby="cartTitle" hidden>
+    <div class="cart__panel">
+      <div class="cart__head">
+        <h2 class="cart__title" id="cartTitle">Your cart</h2>
+        <button class="cart__close" id="cartClose" type="button" aria-label="Close cart">&times;</button>
+      </div>
+      <ul class="cart__items" id="cartItems"></ul>
+      <div class="cart__foot">
+        <div class="cart__total">
+          <span>Total</span>
+          <span id="cartTotal">&mdash;</span>
+        </div>
+        <button class="btn btn--primary cart__checkout" id="cartCheckout" type="button" disabled>Checkout</button>
+        <p class="cart__note" id="cartNote"></p>
+      </div>
+    </div>
   </div>
 </section>
 

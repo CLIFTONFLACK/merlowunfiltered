@@ -62,7 +62,8 @@ Everything in `media/` is a resized copy — the originals are untouched in
 | `chips.png` | chipped-paint mask for the three slogan lines, built from the chips inside the cover wordmark's strokes | `UNFILTERED-cover art.png` |
 | `chips-blue.png` | the same tile, alpha inverted and gamma-curved, painted deep navy — the worn-through undercoat on the H2/H3 headings | derived from `chips.png` |
 | `story-01..02.mp4` + `.jpg` | the two story clips and their poster frames — silent loops, `preload="none"`, started only when the band scrolls into view | `Clips/clips_Seedance/clip_01, 03` |
-| `plate.jpg` | faint texture behind the lyrics | `Design Mockups/UnUnUn_good.png` |
+| `merch-lion.jpg`, `merch-britain.jpg` | the two shop products | `T-Shirt Mockups/UnUnUn_Tshirt_Lion.png`, `..._Britain.png` |
+| `plate.jpg` | faint texture behind the chorus | `Design Mockups/UnUnUn_good.png` |
 | `mark.png`, `favicon.png` | nav mark and tab icon | `M Logo.png` |
 
 The hero video must stay **silent** — browsers refuse to autoplay a clip with an audio
@@ -73,8 +74,11 @@ track, and the page would fall back to the poster image.
 - **Mailing list** — the footer form is a visual placeholder. It intercepts submit and
   says so on screen; nothing is sent anywhere. Point it at Mailchimp / Buttondown /
   ConvertKit when you have an account.
-- **Social links** — the four icons in the footer are `href="#"`. Replace with the real
+- **Social links**: the four icons in the footer are `href="#"`. Replace with the real
   Spotify / YouTube / Instagram / Apple Music URLs in `index.html`.
+- **Shop links**: both product cards in the Shop section are `href="#"`, and the section
+  says so on the page. Point the two `.shop__link` hrefs at the real store and delete the
+  `.shop__pending` paragraph.
 
 ## Previewing locally
 

@@ -284,6 +284,17 @@ a { color: inherit; }
 }
 .btn--primary:hover { background: var(--red-hot); border-color: var(--red-hot); }
 
+/* secondary: outline, so it reads as the quieter of the pair */
+.btn--line {
+  background: transparent;
+  color: var(--bone);
+  border-color: var(--line);
+}
+.btn--line:hover {
+  border-color: var(--bone);
+  background: rgba(237, 234, 228, 0.06);
+}
+
 /* ─────────────── hero ─────────────── */
 
 .hero {
@@ -574,6 +585,39 @@ a { color: inherit; }
   margin: 0;
 }
 
+/* — hover replays the entrance —
+   Keyframes rather than a transition, because a transition has nowhere to
+   return from once the line has landed. An animation restarts every time the
+   pointer re-enters, which is the whole point. Guarded on `hover: hover` so
+   it never fires from a tap on a touch screen, where it would flash once and
+   look like a glitch. */
+
+@media (hover: hover) and (pointer: fine) {
+  .chorus__line:hover .chorus__word { animation: chorus-rise 0.55s var(--ease) both; }
+  .chorus__line:hover .chorus__answer { animation: chorus-slide 0.55s var(--ease) 0.1s both; }
+  .chorus__line:hover .chorus__answer::before { animation: chorus-rule 0.45s var(--ease) both; }
+  .chorus__standing:hover .chorus__falling { animation: chorus-fall 0.6s var(--ease) both; }
+  .chorus__line, .chorus__standing { cursor: default; }
+}
+
+@keyframes chorus-rise {
+  from { transform: translateY(0.55em); opacity: 0.25; }
+  to   { transform: none; opacity: 1; }
+}
+@keyframes chorus-slide {
+  from { transform: translateX(-0.75rem); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+@keyframes chorus-rule {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+/* the payoff line drops in, matching its entrance */
+@keyframes chorus-fall {
+  from { transform: translateY(-0.4em); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+
 /* — the rise, staggered — */
 
 .chorus .reveal { transform: translateY(2.5rem); }
@@ -583,10 +627,23 @@ a { color: inherit; }
 .chorus__standing            { transition-delay: 0.40s; }
 
 @media (max-width: 620px) {
-  /* stacked, so the answer needs its own line and must be free to wrap */
-  .chorus__answer { white-space: normal; padding-left: 0; }
-  .chorus__answer::before { display: none; }
-  .chorus__line { display: block; }
+  /* Stacked. `display: block` on the row alone was not enough: the word and
+     the answer are inline spans, so the answer ran straight on from the full
+     stop ("UNFILTERED.THIS IS WHO I AM") and only wrapped when it happened to
+     be too long. Both are blocks here, so every answer sits on its own line
+     under its word and the three rows read the same way. */
+  .chorus__line { display: block; margin-bottom: 1.4rem; }
+  .chorus__word { display: block; }
+  .chorus__answer {
+    display: block;
+    white-space: normal;
+    padding-left: 2.1rem;
+    margin-top: 0.45rem;
+  }
+  .chorus__answer::before {
+    width: 1.35rem;
+    top: 0.62em;   /* aligns to the first line, not the middle of a wrapped block */
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -594,6 +651,11 @@ a { color: inherit; }
   .chorus__answer,
   .chorus__falling { opacity: 1; transform: none; }
   .chorus__answer::before { transform: scaleX(1); }
+  /* no hover replay either */
+  .chorus__line:hover .chorus__word,
+  .chorus__line:hover .chorus__answer,
+  .chorus__line:hover .chorus__answer::before,
+  .chorus__standing:hover .chorus__falling { animation: none; }
 }
 
 /* ─────────────── story ─────────────── */
@@ -864,6 +926,80 @@ a { color: inherit; }
 }
 
 /* ─────────────── video ─────────────── */
+
+/* ─────────────── shop ─────────────── */
+
+.shop {
+  padding: var(--sect) 0;
+  background: var(--ink-2);
+  border-top: 1px solid var(--line-soft);
+}
+
+.shop__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  gap: clamp(1.5rem, 4vw, 2.5rem);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.shop__link {
+  display: block;
+  text-decoration: none;
+  border: 1px solid var(--line-soft);
+  transition: border-color 0.2s var(--ease), background-color 0.2s var(--ease);
+}
+.shop__link:hover { border-color: var(--line); background: rgba(237, 234, 228, 0.03); }
+
+.shop__media {
+  display: block;
+  overflow: hidden;
+  background: var(--ink);
+}
+.shop__media img {
+  width: 100%;
+  height: auto;
+  /* scale only, so the card's own box never moves and the grid cannot reflow */
+  transition: transform 0.45s var(--ease);
+}
+.shop__link:hover .shop__media img { transform: scale(1.04); }
+
+.shop__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 1rem;
+  padding: 1.1rem clamp(1rem, 2vw, 1.5rem) 1.25rem;
+  border-top: 1px solid var(--line-soft);
+}
+.shop__name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.15rem, 2.4vw, 1.6rem);
+  line-height: 1.1;
+  text-transform: uppercase;
+  color: var(--bone);
+}
+.shop__note {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+.shop__pending {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1.7;
+  letter-spacing: 0.06em;
+  color: rgba(142, 149, 156, 0.8);
+  border-top: 1px solid var(--line-soft);
+  margin: clamp(2rem, 5vw, 3rem) 0 0;
+  padding-top: 1.25rem;
+}
 
 /* ─────────────── footer ─────────────── */
 

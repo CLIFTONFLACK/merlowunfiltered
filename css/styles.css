@@ -216,6 +216,46 @@ a { color: inherit; }
 .fitting::before { top: 0.3em; }
 .fitting::after  { bottom: 0.3em; }
 
+/* ═══════════════════════════════════════════════════════════
+   Worn headings — H2 / H3
+
+   Same chip tile as the slogan, but nothing is masked away. The
+   worn areas are painted deep blue instead of cut out, so the
+   headings read as paint worn through to an undercoat rather
+   than as damaged type. `media/chips-blue.png` is the chip tile
+   with its alpha inverted and run through a gamma curve, so the
+   deepest chips go fully opaque — properly blue, not washed out —
+   while the faint halo around each one drops away. Stronger in
+   colour, lighter in coverage than the slogan.
+
+   Deliberately not applied to `.slogan__stack` (already chipped,
+   and its own colours would be overwritten) or `.footer__h`,
+   which is an 11px mono label where the texture is just noise.
+   ═══════════════════════════════════════════════════════════ */
+
+.section-title,
+.footer__title,
+.band__text h3 {
+  color: var(--bone);   /* fallback; overridden just below */
+}
+
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .section-title,
+  .footer__title,
+  .band__text h3 {
+    background-image:
+      url('../media/chips-blue.png'),
+      linear-gradient(var(--bone), var(--bone));
+    /* chips scale with the type; the flat colour fills the whole box */
+    background-size: 0.8em 0.8em, 100% 100%;
+    background-repeat: repeat, no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
 /* ─────────────── buttons ─────────────── */
 
 .btn {
@@ -243,13 +283,6 @@ a { color: inherit; }
   border-color: var(--red);
 }
 .btn--primary:hover { background: var(--red-hot); border-color: var(--red-hot); }
-
-.btn--ghost {
-  background: transparent;
-  color: var(--bone);
-  border-color: var(--line);
-}
-.btn--ghost:hover { border-color: var(--bone); background: rgba(237,234,228,0.06); }
 
 /* ─────────────── hero ─────────────── */
 
@@ -341,10 +374,13 @@ a { color: inherit; }
 /* The mark itself, lifted from the cover art — not type trying to imitate it. */
 .hero__title {
   margin: 0.25rem 0 0.75rem;
+  padding: 50px;
   line-height: 0;
 }
 .hero__wordmark {
-  width: min(90vw, 880px);
+  /* 100% of the padded box, not of the viewport — otherwise the 50px padding
+     is space the mark simply overflows, and nothing actually moves. */
+  width: min(100%, 880px);
   height: auto;
   margin-inline: auto;
   filter: drop-shadow(0 4px 22px rgba(0, 0, 0, 0.9));
@@ -498,38 +534,15 @@ a { color: inherit; }
 
 /* ─────────────── album ─────────────── */
 
-.album {
-  padding: var(--sect) 0;
-  background: var(--ink-2);
-  border-block: 1px solid var(--line-soft);
-}
-
-.album__grid {
-  display: grid;
-  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
-  gap: clamp(2rem, 6vw, 5rem);
-  align-items: center;
-  margin-bottom: clamp(3rem, 7vw, 5.5rem);
-}
-
-.album__art img {
-  width: 100%;
+/* 03 is the record itself. The cover is ~1.17:1, so it must not be forced
+   into the 16:9 frame the clip bands use — `cover` would slice the artwork. */
+.band--album .band__media { aspect-ratio: auto; }
+.band--album .band__media img {
+  height: auto;
   border: 1px solid var(--line);
-  box-shadow: 0 30px 70px rgba(0,0,0,0.6);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6);
 }
-
-.album__title {
-  font-size: clamp(3rem, 8vw, 6rem);
-  letter-spacing: 0.01em;
-  margin: 0 0 1.25rem;
-}
-
-.album__lede {
-  color: var(--ash);
-  font-size: 1.125rem;
-  max-width: 46ch;
-  margin-bottom: 2rem;
-}
+.band--album .band__text p { max-width: 46ch; }
 
 .facts {
   display: flex;
@@ -559,10 +572,6 @@ a { color: inherit; }
 .album__links { display: flex; flex-wrap: wrap; gap: 0.875rem; }
 
 .featured { border-top: 1px solid var(--line); padding-top: clamp(2rem, 5vw, 3rem); }
-
-@media (max-width: 860px) {
-  .album__grid { grid-template-columns: 1fr; }
-}
 
 /* ─────────────── youtube slots ─────────────── */
 
@@ -734,26 +743,6 @@ a { color: inherit; }
 }
 
 /* ─────────────── video ─────────────── */
-
-.video {
-  padding: var(--sect) 0;
-  background: var(--ink-2);
-  border-block: 1px solid var(--line-soft);
-}
-.video__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
-  gap: clamp(1.5rem, 4vw, 2.5rem);
-}
-.video figure { margin: 0; }
-.video figcaption {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--ash);
-  padding-top: 0.9rem;
-}
 
 /* ─────────────── lyrics ─────────────── */
 

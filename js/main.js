@@ -15,9 +15,7 @@
    ─────────────────────────────────────────────────────────── */
 
 const VIDEOS = {
-  featured:   '',   // Album section — official lyric video
-  official:   '',   // Video section — official lyric video
-  short:      '',   // Video section — chorus cut / short
+  featured:   '9Us7JsDWFEg',   // Story 03 — official lyric video
 
   'track-01': '',   // Caldwell            — Indie UK
   'track-02': '',   // Marcus Whitefield   — Indie UK
@@ -122,17 +120,40 @@ function renderSlot(slot) {
   }
 
   slot.innerHTML = `
-    <button class="yt__facade" type="button"
-            style="background-image:url('https://i.ytimg.com/vi/${id}/hqdefault.jpg')"
-            aria-label="Play: ${title}">
+    <button class="yt__facade" type="button" aria-label="Play: ${title}">
       <span class="yt__play" aria-hidden="true">
         <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
       </span>
     </button>`;
 
-  slot.querySelector('.yt__facade').addEventListener('click', () => {
+  const facade = slot.querySelector('.yt__facade');
+
+  /* hqdefault is 4:3 and letterboxes inside a 16:9 tile. maxresdefault is a
+     true 16:9 frame but does not exist for every upload, so try it first and
+     fall back rather than assuming either one. */
+  const setThumb = (name) => {
+    facade.style.backgroundImage = `url('https://i.ytimg.com/vi/${id}/${name}.jpg')`;
+  };
+  const probe = new Image();
+  probe.onload = () => setThumb(probe.naturalWidth > 320 ? 'maxresdefault' : 'hqdefault');
+  probe.onerror = () => setThumb('hqdefault');
+  probe.src = `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`;
+  setThumb('hqdefault');
+
+  facade.addEventListener('click', () => {
+    /* Stripped-back player: no annotations, no red progress bar, related
+       videos held to this channel. Controls and keyboard are left alone —
+       they are what makes the player usable, not branding. */
+    const params = new URLSearchParams({
+      autoplay: '1',
+      rel: '0',
+      modestbranding: '1',
+      iv_load_policy: '3',
+      playsinline: '1',
+      color: 'white',
+    });
     const iframe = document.createElement('iframe');
-    iframe.src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`;
+    iframe.src = `https://www.youtube-nocookie.com/embed/${id}?${params}`;
     iframe.title = title;
     iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
     iframe.allowFullscreen = true;

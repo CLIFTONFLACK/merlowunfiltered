@@ -60,6 +60,8 @@ Everything in `media/` is a resized copy — the originals are untouched in
 | `hero-loop.mp4` | hero background loop, audio stripped | `Assets/Songs/Un-Filtered_Video/M logo animation 2.mp4` |
 | `hero-poster.jpg` | still shown before the video loads | frame from the same clip |
 | `cover.jpg` | album cover | `UNFILTERED-cover art.png` |
+| `merlow-wordmark.png` | the hero MERLOW mark — the cover's own wordmark, keyed to transparency, not type imitating it | `UNFILTERED-cover art.png` |
+| `chips.png` | chipped-paint mask for the three slogan lines, built from the chips inside the cover wordmark's strokes | `UNFILTERED-cover art.png` |
 | `story-01..04.jpg` | story section imagery | Scene + People Mockups |
 | `plate.jpg` | faint texture behind the lyrics | `Design Mockups/UnUnUn_good.png` |
 | `mark.png`, `favicon.png` | nav mark and tab icon | `M Logo.png` |

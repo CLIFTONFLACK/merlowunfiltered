@@ -38,6 +38,14 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+/* The UA stylesheet gives [hidden] `display: none`, but any author rule that
+   sets `display` outranks it. `.cart` is `display: flex` and `.cart__toggle`
+   is `display: inline-flex`, so both ignored their `hidden` attribute and the
+   cart drawer sat open against the right edge permanently. This is the
+   standard catch-all, and it keeps the next `display`-styled element that
+   toggles via `hidden` from doing the same thing. */
+[hidden] { display: none !important; }
+
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;

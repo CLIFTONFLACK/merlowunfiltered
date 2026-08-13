@@ -64,7 +64,7 @@ Everything in `media/` is a resized copy — the originals are untouched in
 | `story-01..02.mp4` + `.jpg` | the two story clips and their poster frames — silent loops, `preload="none"`, started only when the band scrolls into view | `Clips/clips_Seedance/clip_01, 03` |
 | `merch-lion.jpg`, `merch-britain.jpg` | the two shop products | `T-Shirt Mockups/UnUnUn_Tshirt_Lion.png`, `..._Britain.png` |
 | `plate.jpg` | faint texture behind the chorus | `Design Mockups/UnUnUn_good.png` |
-| `favicon.png` (256), `favicon-180.png`, `favicon-32.png` | tab icon and apple-touch icon: the M mark with the studio background keyed out to transparency and cropped to the mark | `M Logo.png` |
+| `favicon.png` (256), `favicon-180.png`, `favicon-32.png` | tab icon and apple-touch icon: the M mark, studio background keyed out to transparency, cropped to the mark, with a bone rim so the near-black half still reads on a dark browser tab | `M Logo.png` |
 
 The hero video must stay **silent** — browsers refuse to autoplay a clip with an audio
 track, and the page would fall back to the poster image.

@@ -191,7 +191,36 @@ function initHeroVideo() {
 }
 
 /* ───────────────────────────────────────────────────────────
-   6. Mailing-list placeholder
+   6. Story clips
+
+   Three silent loops, `preload="none"` so none of them is
+   fetched on page load — each starts only when its band is on
+   screen and pauses when it leaves. Under reduced motion they
+   never start, and the poster frame stands in.
+   ─────────────────────────────────────────────────────────── */
+
+function initStoryVideos() {
+  const clips = document.querySelectorAll('.band__video');
+  if (!clips.length || reduceMotion || !('IntersectionObserver' in window)) return;
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      const v = entry.target;
+      if (entry.isIntersecting) {
+        if (v.preload === 'none') v.preload = 'auto';
+        const p = v.play();
+        if (p && typeof p.catch === 'function') p.catch(() => { /* poster stands in */ });
+      } else {
+        v.pause();
+      }
+    });
+  }, { rootMargin: '100px 0px', threshold: 0.25 });
+
+  clips.forEach((v) => io.observe(v));
+}
+
+/* ───────────────────────────────────────────────────────────
+   7. Mailing-list placeholder
    ─────────────────────────────────────────────────────────── */
 
 function initSignup() {
@@ -216,6 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
   buildVideoSlots();
   initReveal();
   initHeroVideo();
+  initStoryVideos();
   initSignup();
 
   const year = document.getElementById('year');

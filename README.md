@@ -62,7 +62,7 @@ Everything in `media/` is a resized copy — the originals are untouched in
 | `cover.jpg` | album cover | `UNFILTERED-cover art.png` |
 | `merlow-wordmark.png` | the hero MERLOW mark — the cover's own wordmark, keyed to transparency, not type imitating it | `UNFILTERED-cover art.png` |
 | `chips.png` | chipped-paint mask for the three slogan lines, built from the chips inside the cover wordmark's strokes | `UNFILTERED-cover art.png` |
-| `story-01..04.jpg` | story section imagery | Scene + People Mockups |
+| `story-01..03.mp4` + `.jpg` | the three story clips and their poster frames — silent loops, `preload="none"`, started only when the band scrolls into view | `Clips/clips_Seedance/clip_01, 03, 08` |
 | `plate.jpg` | faint texture behind the lyrics | `Design Mockups/UnUnUn_good.png` |
 | `mark.png`, `favicon.png` | nav mark and tab icon | `M Logo.png` |
 

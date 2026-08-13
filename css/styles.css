@@ -332,8 +332,11 @@ a { color: inherit; }
 /* Belt and braces over the flare frame — the scrim carries the contrast, the
    shadow keeps the smaller type crisp where the gradient is weakest.
    The gold and wood headlines get drop-shadow from .metal instead. */
-.hero__content .eyebrow,
-.hero__meta { text-shadow: 0 2px 16px rgba(0,0,0,0.9); }
+.hero__content .eyebrow {
+  font-size: 0.875rem;          /* 14px — 2px up from the shared 12px */
+  color: var(--bone);
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.9);
+}
 
 /* The mark itself, lifted from the cover art — not type trying to imitate it. */
 .hero__title {
@@ -362,15 +365,6 @@ a { color: inherit; }
 .hero__plank {
   letter-spacing: 0.34em;
   padding-left: 0.34em; /* optical centring against the tracking */
-}
-
-.hero__meta {
-  font-family: var(--font-mono);
-  font-size: clamp(0.6875rem, 1.6vw, 0.8125rem);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ash);
-  margin: 0 0 2.25rem;
 }
 
 .hero__actions {
@@ -464,15 +458,14 @@ a { color: inherit; }
 /* One frame for all four bands. The sources range from 1:1 to 2.2:1, and left
    to their natural sizes the bands read as a ragged pile rather than a series.
    Every image is pre-cropped to 3:2 or wider, so `cover` only ever trims. */
-.band__media { position: relative; aspect-ratio: 3 / 2; }
-.band__media img {
+.band__media { position: relative; aspect-ratio: 16 / 9; }
+.band__media img,
+.band__media video {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: grayscale(0.35) contrast(1.06);
-  transition: filter 0.45s var(--ease);
+  background: var(--ink-2);
 }
-.band:hover .band__media img { filter: grayscale(0) contrast(1.02); }
 
 .band__media::after {
   content: '';

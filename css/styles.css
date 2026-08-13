@@ -228,8 +228,8 @@ a { color: inherit; }
    while the faint halo around each one drops away. Stronger in
    colour, lighter in coverage than the slogan.
 
-   Deliberately not applied to `.slogan__stack` (already chipped,
-   and its own colours would be overwritten) or `.footer__h`,
+   Deliberately not applied to the chorus words (already chipped,
+   and their own colours would be overwritten) or `.footer__h`,
    which is an 11px mono label where the texture is just noise.
    ═══════════════════════════════════════════════════════════ */
 
@@ -326,32 +326,39 @@ a { color: inherit; }
    the column and the copy spills past its dark core — visible as red-on-flame
    on the eyebrow at 375px. Widen it there. */
 @media (max-width: 700px) {
-  /* Zoomed out 20% so more of the logo animation is visible in portrait.
-     object-fit: cover is by definition the smallest scale that fills, so
-     pulling back exposes the frame edge as a hard rectangle — which reads as a
-     broken image. Feather all four edges into the hero's black instead. */
+  /* Full width, whole logo visible.
+     `object-fit: cover` on a portrait viewport crops a 16:9 clip hard from the
+     sides, which is what was cutting the arms off the M, and scaling the
+     element down only shrank the already-cropped picture. Instead the video
+     keeps its own 16:9 height and is sized to the full viewport width, so the
+     entire frame is on screen. Height is auto rather than 100%, which means
+     the mask below lands on the picture itself and not on empty box. */
   .hero__video {
-    transform: scale(0.8);
-    transform-origin: center;
+    inset: auto 0 auto 0;
+    top: 50%;
+    width: 100%;
+    height: auto;
+    transform: translateY(-50%);
+    object-fit: contain;
     -webkit-mask-image:
-      linear-gradient(to bottom, transparent 0, #000 9%, #000 91%, transparent 100%),
-      linear-gradient(to right,  transparent 0, #000 7%, #000 93%, transparent 100%);
+      linear-gradient(to bottom, transparent 0, #000 14%, #000 86%, transparent 100%);
     mask-image:
-      linear-gradient(to bottom, transparent 0, #000 9%, #000 91%, transparent 100%),
-      linear-gradient(to right,  transparent 0, #000 7%, #000 93%, transparent 100%);
-    -webkit-mask-composite: source-in;
-    mask-composite: intersect;
+      linear-gradient(to bottom, transparent 0, #000 14%, #000 86%, transparent 100%);
   }
 
+  /* Lighter than it was: the picture is now a short band in the middle of the
+     hero rather than a full bleed, so far less of the scrim is doing
+     contrast work and a heavy one just dims the logo for nothing. Still
+     verified against the loop's brightest frame. */
   .hero__scrim {
     background:
       radial-gradient(ellipse 82% 30% at 50% 42%,
-        rgba(10,11,13,0.86) 0%, rgba(10,11,13,0.66) 55%,
-        rgba(10,11,13,0.20) 85%, rgba(10,11,13,0) 100%),
+        rgba(10,11,13,0.70) 0%, rgba(10,11,13,0.52) 55%,
+        rgba(10,11,13,0.16) 85%, rgba(10,11,13,0) 100%),
       linear-gradient(to bottom,
-        rgba(10,11,13,0.72) 0%, rgba(10,11,13,0.14) 26%,
-        rgba(10,11,13,0.20) 62%, rgba(10,11,13,0.90) 100%),
-      rgba(10,11,13,0.16);
+        rgba(10,11,13,0.72) 0%, rgba(10,11,13,0.10) 26%,
+        rgba(10,11,13,0.16) 62%, rgba(10,11,13,0.90) 100%),
+      rgba(10,11,13,0.12);
   }
 }
 
@@ -443,28 +450,131 @@ a { color: inherit; }
   50%      { opacity: 1;    transform: scaleY(1);   transform-origin: top; }
 }
 
-/* ─────────────── slogan ─────────────── */
+/* ═══════════════════════════════════════════════════════════
+   Chorus / manifesto
 
-.slogan {
+   The three plate words and the chorus lyric were saying the
+   same thing in two places, so they are one section: each word
+   is the call, and the line beside it is the answer.
+
+   Everything rises on scroll-in. The stagger comes from
+   transition-delay on the shared `.reveal` mechanism rather
+   than keyframes, so the reduced-motion block that already
+   flattens transition-duration flattens this too.
+   ═══════════════════════════════════════════════════════════ */
+
+.chorus {
+  position: relative;
   padding: var(--sect) 0;
+  overflow: hidden;
   border-bottom: 1px solid var(--line-soft);
 }
 
-.slogan__stack {
-  font-size: clamp(1.9rem, 7.6vw, 6.4rem);
-  line-height: 1.06;
-  letter-spacing: 0;
-  margin: 0 0 2rem;
+.chorus__bg {
+  position: absolute;
+  inset: -8%;
+  background: url('../media/plate.jpg') center/cover no-repeat;
+  opacity: 0.07;
+  filter: grayscale(1) contrast(1.3);
+  animation: plate-drift 42s ease-in-out infinite alternate;
 }
-.slogan__stack span { display: block; }
-.slogan__stack b { font-weight: inherit; }
+@keyframes plate-drift {
+  from { transform: scale(1) translate3d(0, 0, 0); }
+  to   { transform: scale(1.08) translate3d(-1.5%, -1%, 0); }
+}
+
+.chorus .wrap { position: relative; }
+
+.chorus__quote {
+  margin: 0 0 clamp(2rem, 5vw, 3.25rem);
+  border: 0;
+  padding: 0;
+}
+
+/* — call and answer — */
+
+.chorus__line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 clamp(0.75rem, 2vw, 1.75rem);
+  margin: 0 0 clamp(0.5rem, 1.4vw, 1rem);
+}
+
+.chorus__word {
+  font-family: var(--font-display);
+  font-weight: 900;
+  /* Capped at 6rem, not 6.4: measured at 1440, "Uncensored." plus its answer
+     needed 1092px against 1084px available, so that one line alone dropped its
+     answer onto a second row and broke the rhythm of the other two. */
+  font-size: clamp(1.9rem, 7.6vw, 6rem);
+  line-height: 1.06;
+  text-transform: uppercase;
+}
+.chorus__word b { font-weight: inherit; }
+
 /* The full stops keep the merch plate's signature — red, bone, blue — and stay
    solid so the punctuation reads at a glance against the distressed words. */
-.slogan__stack .dot { font-style: normal; color: var(--bone); }
-.slogan__stack .dot--red  { color: var(--red-hot); }
-.slogan__stack .dot--blue { color: var(--blue); }
+.chorus .dot { font-style: normal; color: var(--bone); }
+.chorus .dot--red  { color: var(--red-hot); }
+.chorus .dot--blue { color: var(--blue); }
 
-.slogan__note {
+.chorus__answer {
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: clamp(0.75rem, 1.5vw, 1rem);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ash);
+  padding-left: clamp(1.5rem, 3vw, 2.75rem);
+  white-space: nowrap;
+  /* the answer arrives after its word, sliding in behind a drawn rule */
+  opacity: 0;
+  transform: translateX(-0.75rem);
+  transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
+  transition-delay: 0.45s;
+}
+.chorus__answer::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: clamp(1rem, 2.2vw, 2rem);
+  height: 1px;
+  background: var(--red-hot);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.45s var(--ease);
+  transition-delay: 0.35s;
+}
+.chorus__line.is-in .chorus__answer { opacity: 1; transform: none; }
+.chorus__line.is-in .chorus__answer::before { transform: scaleX(1); }
+
+/* — the payoff line — */
+
+.chorus__standing {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(1.5rem, 5.2vw, 4rem);
+  line-height: 1.04;
+  text-transform: uppercase;
+  color: var(--bone);
+  margin: clamp(1.5rem, 4vw, 2.75rem) 0 0;
+  padding-top: clamp(1.25rem, 3vw, 2rem);
+  border-top: 1px solid var(--line);
+}
+/* the only line that moves down instead of up — it is about walls falling */
+.chorus__falling {
+  display: inline-block;
+  color: var(--ash);
+  opacity: 0;
+  transform: translateY(-0.4em);
+  transition: opacity 0.6s var(--ease), transform 0.6s var(--ease);
+  transition-delay: 0.35s;
+}
+.chorus__standing.is-in .chorus__falling { opacity: 1; transform: none; }
+
+.chorus__note {
   font-family: var(--font-mono);
   font-size: clamp(0.75rem, 2vw, 0.9375rem);
   letter-spacing: 0.16em;
@@ -472,7 +582,38 @@ a { color: inherit; }
   color: var(--ash);
   border-top: 1px solid var(--line);
   padding-top: 1.5rem;
+  margin: 0 0 0.85rem;
+}
+
+.chorus__credit {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(142, 149, 156, 0.7);
   margin: 0;
+}
+
+/* — the rise, staggered — */
+
+.chorus .reveal { transform: translateY(2.5rem); }
+.chorus__line:nth-of-type(1) { transition-delay: 0.00s; }
+.chorus__line:nth-of-type(2) { transition-delay: 0.13s; }
+.chorus__line:nth-of-type(3) { transition-delay: 0.26s; }
+.chorus__standing            { transition-delay: 0.40s; }
+
+@media (max-width: 620px) {
+  /* stacked, so the answer needs its own line and must be free to wrap */
+  .chorus__answer { white-space: normal; padding-left: 0; }
+  .chorus__answer::before { display: none; }
+  .chorus__line { display: block; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chorus__bg { animation: none; }
+  .chorus__answer,
+  .chorus__falling { opacity: 1; transform: none; }
+  .chorus__answer::before { transform: scaleX(1); }
 }
 
 /* ─────────────── story ─────────────── */
@@ -743,52 +884,6 @@ a { color: inherit; }
 }
 
 /* ─────────────── video ─────────────── */
-
-/* ─────────────── lyrics ─────────────── */
-
-.lyrics {
-  position: relative;
-  padding: var(--sect) 0;
-  overflow: hidden;
-}
-.lyrics__bg {
-  position: absolute;
-  inset: 0;
-  background: url('../media/plate.jpg') center/cover no-repeat;
-  opacity: 0.07;
-  filter: grayscale(1) contrast(1.3);
-}
-.lyrics .wrap { position: relative; }
-
-.lyrics__quote {
-  margin: 0 0 1.5rem;
-  border: 0;
-  border-left: 3px solid var(--red);
-  padding-left: clamp(1.25rem, 4vw, 2.5rem);
-}
-.lyrics__quote p {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: clamp(1.5rem, 4.6vw, 3.25rem);
-  line-height: 1.08;
-  text-transform: uppercase;
-  letter-spacing: -0.005em;
-  margin: 0 0 1.5rem;
-}
-.lyrics__tail {
-  color: var(--ash);
-  font-size: clamp(1rem, 2.4vw, 1.5rem) !important;
-  font-weight: 700 !important;
-}
-.lyrics__credit {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--ash);
-  margin: 0;
-  padding-left: clamp(1.25rem, 4vw, 2.5rem);
-}
 
 /* ─────────────── footer ─────────────── */
 

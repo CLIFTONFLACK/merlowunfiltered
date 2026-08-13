@@ -78,9 +78,9 @@ function buildTracklist() {
         <span class="track__chev" aria-hidden="true"></span>
       </button>
       <div class="track__panel" id="${panelId}" role="region"
-           aria-label="${track.artist} — video">
+           aria-label="${track.artist}, video">
         <div class="yt" data-yt="track-${n}"
-             data-yt-title="UNFILTERED feat. ${track.artist} — ${track.genre}"></div>
+             data-yt-title="UNFILTERED feat. ${track.artist} (${track.genre})"></div>
       </div>`;
 
     li.querySelector('.track__btn').addEventListener('click', (e) => {
@@ -252,7 +252,7 @@ function initSignup() {
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     note.textContent =
-      'Not connected yet — no provider is wired up, so nothing was sent.';
+      'Not connected yet. No provider is wired up, so nothing was sent.';
     note.dataset.state = 'ok';
   });
 }

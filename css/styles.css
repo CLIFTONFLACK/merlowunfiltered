@@ -109,6 +109,110 @@ a { color: inherit; }
   margin: 0 0 3rem;
 }
 
+/* ═══════════════════════════════════════════════════════════
+   Distressed material type
+
+   The fill is a gradient clipped to the glyphs; the wear is a
+   fractal-noise mask sitting on top of it. The mask's alpha ramp
+   bottoms out at 0.62, never 0 — pinholes read as age, but no
+   stroke is ever cut through, so the words stay legible at any
+   size and over any frame of the hero loop.
+   ═══════════════════════════════════════════════════════════ */
+
+.metal {
+  /* Fallback for anything without background-clip: text — a flat, legible
+     colour rather than an invisible headline. Overridden just below. */
+  color: var(--bone);
+  font-weight: inherit;
+}
+
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .metal {
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+
+    -webkit-mask-image: var(--wear);
+    mask-image: var(--wear);
+    -webkit-mask-size: 340px 340px;
+    mask-size: 340px 340px;
+
+    /* drop-shadow, not text-shadow: a text-shadow paints *between* the
+       clipped background and the glyph, so it shows through as a dark
+       blob inside every letter. */
+    filter: drop-shadow(0 3px 14px rgba(0, 0, 0, 0.85));
+  }
+}
+
+:root {
+  /* Full-strength wear — for display sizes where a stroke is many px wide. */
+  --wear: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='340' height='340'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.62' numOctaves='4' seed='11'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 1 0 0 0 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='table' tableValues='0.62 0.86 1 1 1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='340' height='340' filter='url(%23w)'/%3E%3C/svg%3E");
+
+  /* Gentler wear, coarser cells — for the smaller, letter-spaced type where
+     the full-strength mask eats whole sections of a 2px stroke and the word
+     reads as broken rather than weathered. */
+  --wear-soft: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='340' height='340'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.28' numOctaves='3' seed='5'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 1 0 0 0 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='table' tableValues='0.82 0.95 1 1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='340' height='340' filter='url(%23w)'/%3E%3C/svg%3E");
+}
+
+/* — distressed gold — */
+.metal--gold {
+  background-image:
+    /* hairline scratches, raking across the fill */
+    repeating-linear-gradient(102deg,
+      rgba(255,255,255,0.20) 0 1px, rgba(0,0,0,0) 1px 11px),
+    repeating-linear-gradient(74deg,
+      rgba(70,44,8,0.22) 0 1px, rgba(0,0,0,0) 1px 19px),
+    linear-gradient(176deg,
+      #FBEBB4 0%, #E8C56A 16%, #B8862F 34%, #F3DE9C 48%,
+      #C9992F 62%, #8A6420 78%, #E4C471 92%, #A87C28 100%);
+}
+
+/* — distressed wood, brass fittings — */
+.metal--wood {
+  background-image:
+    /* grain: sparse, low-contrast lines running with the plank */
+    repeating-linear-gradient(90deg,
+      rgba(74,44,20,0.20) 0 1px, rgba(0,0,0,0) 1px 10px),
+    repeating-linear-gradient(90deg,
+      rgba(255,238,208,0.14) 0 1px, rgba(0,0,0,0) 1px 23px),
+    linear-gradient(178deg,
+      #F0DCBE 0%, #D8B98E 20%, #BE9A6C 38%, #EBD6B6 54%,
+      #C7A377 72%, #A98457 88%, #E2C9A4 100%);
+  /* small type: the strokes are only a couple of px wide here */
+  -webkit-mask-image: var(--wear-soft);
+  mask-image: var(--wear-soft);
+}
+
+.fitting {
+  position: relative;
+  flex: 0 0 auto;
+  width: 0.5em;
+  height: 1.85em;
+  border-radius: 1px;
+  background:
+    linear-gradient(90deg,
+      #6B4E1C 0%, #C9A03E 22%, #F2E1A6 42%, #D6AE48 52%,
+      #B98C2C 70%, #7A5B26 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(40, 26, 6, 0.55),
+    0 2px 5px rgba(0, 0, 0, 0.6);
+}
+.fitting::before,
+.fitting::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  width: 0.15em;
+  height: 0.15em;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  background: radial-gradient(circle at 34% 30%, #FFF6CE, #C89C38 58%, #63481A);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.7);
+}
+.fitting::before { top: 0.3em; }
+.fitting::after  { bottom: 0.3em; }
+
 /* ─────────────── buttons ─────────────── */
 
 .btn {
@@ -206,9 +310,9 @@ a { color: inherit; }
   max-width: 60rem;
 }
 /* Belt and braces over the flare frame — the scrim carries the contrast, the
-   shadow keeps the smaller type crisp where the gradient is weakest. */
+   shadow keeps the smaller type crisp where the gradient is weakest.
+   The gold and wood headlines get drop-shadow from .metal instead. */
 .hero__content .eyebrow,
-.hero__sub,
 .hero__meta { text-shadow: 0 2px 16px rgba(0,0,0,0.9); }
 
 .hero__title {
@@ -216,17 +320,22 @@ a { color: inherit; }
   letter-spacing: 0.02em;
   line-height: 0.85;
   margin: 0.25rem 0 0.5rem;
-  text-shadow: 0 6px 48px rgba(0,0,0,0.75);
 }
 
 .hero__sub {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.5rem, 1.4vw, 1rem);
   font-family: var(--font-display);
   font-weight: 700;
   font-size: clamp(1.25rem, 4vw, 2.25rem);
-  letter-spacing: 0.34em;
   text-transform: uppercase;
-  color: var(--bone);
   margin: 0 0 1.25rem;
+}
+
+.hero__plank {
+  letter-spacing: 0.34em;
   padding-left: 0.34em; /* optical centring against the tracking */
 }
 
@@ -293,10 +402,12 @@ a { color: inherit; }
   margin: 0 0 2rem;
 }
 .slogan__stack span { display: block; }
+.slogan__stack b { font-weight: inherit; }
+/* The full stops keep the merch plate's signature — red, bone, blue — and stay
+   solid so the punctuation reads at a glance against the distressed words. */
 .slogan__stack .dot { font-style: normal; color: var(--bone); }
 .slogan__stack .dot--red  { color: var(--red-hot); }
 .slogan__stack .dot--blue { color: var(--blue); }
-.slogan__stack .blue { color: var(--blue); font-weight: inherit; }
 
 .slogan__note {
   font-family: var(--font-mono);

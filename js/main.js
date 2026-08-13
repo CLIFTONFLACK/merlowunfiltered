@@ -170,9 +170,10 @@ function buildVideoSlots() {
    ─────────────────────────────────────────────────────────── */
 
 function initReveal() {
-  const items = document.querySelectorAll('.reveal');
   if (reduceMotion || !('IntersectionObserver' in window)) {
-    items.forEach((el) => el.classList.add('is-in'));
+    document.querySelectorAll('.reveal').forEach((el) => el.classList.add('is-in'));
+    // Later arrivals still need showing — see the note below.
+    watchForLateReveals((el) => el.classList.add('is-in'));
     return;
   }
   const io = new IntersectionObserver((entries) => {
@@ -183,7 +184,25 @@ function initReveal() {
     });
   }, { rootMargin: '0px 0px -12% 0px', threshold: 0.08 });
 
-  items.forEach((el) => io.observe(el));
+  document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+  watchForLateReveals((el) => io.observe(el));
+}
+
+/* Anything injected after boot carrying `.reveal` — the shop's status and
+   error messages, for one — was never picked up, because the sweep above only
+   ever ran once. Those elements sat at opacity 0 permanently, so a failed shop
+   load rendered as blank space instead of its message. */
+function watchForLateReveals(handle) {
+  if (!('MutationObserver' in window)) return;
+  new MutationObserver((records) => {
+    records.forEach((rec) => {
+      rec.addedNodes.forEach((node) => {
+        if (node.nodeType !== 1) return;
+        if (node.classList.contains('reveal')) handle(node);
+        node.querySelectorAll?.('.reveal').forEach(handle);
+      });
+    });
+  }).observe(document.body, { childList: true, subtree: true });
 }
 
 /* ───────────────────────────────────────────────────────────

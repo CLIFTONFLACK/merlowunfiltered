@@ -640,9 +640,15 @@ a { color: inherit; }
    quickly reads as a jump. This travels a third of what it used to over more
    than twice the time, and lands on --ease-soft, so the last few pixels drift
    rather than snap. The faint scale settles the line into the page with it. */
+/* Longhands, not the `transition` shorthand: the shorthand carries an implicit
+   transition-delay: 0s, and at (0,2,0) it outranks the bare `.chorus__standing`
+   below, which flattened the payoff line's 1.05s wait to nothing. Measured —
+   it was peaking at 39ms alongside the first line instead of after the third. */
 .chorus .reveal {
   transform: translateY(0.9rem) scale(0.994);
-  transition: opacity 1.8s var(--ease-soft), transform 1.8s var(--ease-soft);
+  transition-property: opacity, transform;
+  transition-duration: 1.8s;
+  transition-timing-function: var(--ease-soft);
 }
 
 /* Wide enough apart that the three lines arrive one at a time and the payoff

@@ -963,10 +963,20 @@ a { color: inherit; }
   display: block;
   overflow: hidden;
   background: var(--ink);
+  /* Reserves the box before the image arrives, so a card cannot sit collapsed
+     and then snap open under the reader on a slow connection. The static cards
+     this section replaced carried width/height attributes and got this for
+     free; the JS-injected ones lost it. 1/1 because Printful's mockup previews
+     are square — measured 800x800 on all three current products.
+     contain, not cover: a future Printful product whose preview is not square
+     would be cropped by cover, and the ink background letterboxes it cleanly. */
+  aspect-ratio: 1 / 1;
 }
 .shop__media img {
+  display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: contain;
   /* scale only, so the card's own box never moves and the grid cannot reflow */
   transition: transform 0.45s var(--ease);
 }
@@ -989,6 +999,24 @@ a { color: inherit; }
   text-transform: uppercase;
   color: var(--bone);
 }
+/* Sits opposite .shop__name in the baseline-aligned .shop__meta row — the slot
+   the old static cards gave to .shop__note. The range now runs a cap to a
+   letterman jacket, so a price on the face of the card does real work. */
+.shop__price {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  color: var(--bone);
+  white-space: nowrap;
+}
+.shop__price-from {
+  margin-right: 0.45em;
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
 .shop__note {
   font-family: var(--font-mono);
   font-size: 0.6875rem;

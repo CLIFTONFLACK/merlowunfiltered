@@ -337,9 +337,23 @@ function setQuantity(variantId, quantity) {
   renderCart();
 }
 
+/* Cheapest variant, and whether the others cost more — a jacket priced per size
+   should read "from $113.50" rather than quoting one size as though it were the
+   price. Returns null for a product with nothing purchasable. */
+function priceLabel(variants) {
+  if (!variants.length) return null;
+  const low = Math.min(...variants.map((v) => v.price));
+  const high = Math.max(...variants.map((v) => v.price));
+  const amount = money(low, variants[0].currency);
+  return high > low
+    ? `<span class="shop__price-from">from</span>${escapeHtml(amount)}`
+    : escapeHtml(amount);
+}
+
 function renderProductCard(product) {
   const variants = product.variants || [];
   const image = product.thumbnail || (variants[0] && variants[0].image) || '';
+  const price = priceLabel(variants);
   const options = variants
     .map((v) => `<option value="${v.id}">${escapeHtml(v.name)} — ${money(v.price, v.currency)}</option>`)
     .join('');
@@ -347,10 +361,11 @@ function renderProductCard(product) {
   return `
     <li class="shop__item reveal">
       <span class="shop__media">
-        ${image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async">` : ''}
+        ${image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(product.name)}" width="800" height="800" loading="lazy" decoding="async">` : ''}
       </span>
       <span class="shop__meta">
         <span class="shop__name">${escapeHtml(product.name)}</span>
+        ${price ? `<span class="shop__price">${price}</span>` : ''}
       </span>
       ${variants.length ? `
         <form class="shop__form" data-add-to-cart="${product.id}">

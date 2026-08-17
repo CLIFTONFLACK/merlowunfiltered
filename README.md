@@ -95,6 +95,12 @@ api/create-checkout-session.js POST — cart in, Stripe Checkout URL out
 api/webhook.js                POST — Stripe -> Printful order creation
 ```
 
+**Adding products.** Nothing here needs editing — add the product in Printful and it appears
+on the site within about a minute (the catalog is cached for 60s per warm lambda, and the
+response carries `s-maxage=60`). Cards render from whatever the store returns, so the size /
+option picker and the "from" price follow the variants you sync. `lib/printful.js` walks every
+page of `/store/products`, so the catalog is not capped at Printful's default page of 20.
+
 **Required Vercel environment variables:**
 
 | Variable | Where it comes from |

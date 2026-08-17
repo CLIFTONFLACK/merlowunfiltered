@@ -32,6 +32,13 @@
   --z-hero-ui: 30;
 
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  /* A long, soft landing: almost all of the distance is covered early and the
+     last few pixels take their time, so nothing arrives with a snap. Used by
+     the chorus, where the motion is meant to be felt rather than noticed. */
+  --ease-soft:   cubic-bezier(0.16, 1, 0.3, 1);
+  /* Symmetrical and slow at both ends — for anything that drifts rather than
+     arrives, so it eases out of rest and back into it without a turn. */
+  --ease-breath: cubic-bezier(0.37, 0, 0.63, 1);
 }
 
 /* ─────────────── reset / base ─────────────── */
@@ -475,7 +482,9 @@ a { color: inherit; }
   background: url('../media/plate.jpg') center/cover no-repeat;
   opacity: 0.07;
   filter: grayscale(1) contrast(1.3);
-  animation: plate-drift 42s ease-in-out infinite alternate;
+  /* Slower than before and eased at both ends, so the turn at each extreme is
+     a breath rather than a stop — at 42s the reversal was catchable. */
+  animation: plate-drift 78s var(--ease-breath) infinite alternate;
 }
 @keyframes plate-drift {
   from { transform: scale(1) translate3d(0, 0, 0); }
@@ -529,9 +538,9 @@ a { color: inherit; }
   white-space: nowrap;
   /* the answer arrives after its word, sliding in behind a drawn rule */
   opacity: 0;
-  transform: translateX(-0.75rem);
-  transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
-  transition-delay: 0.45s;
+  transform: translateX(-0.5rem);
+  transition: opacity 1.5s var(--ease-soft), transform 1.5s var(--ease-soft);
+  transition-delay: 0.75s;
 }
 .chorus__answer::before {
   content: '';
@@ -543,8 +552,9 @@ a { color: inherit; }
   background: var(--red-hot);
   transform: scaleX(0);
   transform-origin: left;
-  transition: transform 0.45s var(--ease);
-  transition-delay: 0.35s;
+  /* the rule draws itself first and the answer follows it in */
+  transition: transform 1.3s var(--ease-soft);
+  transition-delay: 0.5s;
 }
 .chorus__line.is-in .chorus__answer { opacity: 1; transform: none; }
 .chorus__line.is-in .chorus__answer::before { transform: scaleX(1); }
@@ -567,9 +577,9 @@ a { color: inherit; }
   display: inline-block;
   color: var(--ash);
   opacity: 0;
-  transform: translateY(-0.4em);
-  transition: opacity 0.6s var(--ease), transform 0.6s var(--ease);
-  transition-delay: 0.35s;
+  transform: translateY(-0.3em);
+  transition: opacity 1.7s var(--ease-soft), transform 1.7s var(--ease-soft);
+  transition-delay: 0.6s;
 }
 .chorus__standing.is-in .chorus__falling { opacity: 1; transform: none; }
 
@@ -601,38 +611,58 @@ a { color: inherit; }
    look like a glitch. */
 
 @media (hover: hover) and (pointer: fine) {
-  .chorus__line:hover .chorus__word { animation: chorus-rise 0.55s var(--ease) both; }
-  .chorus__line:hover .chorus__answer { animation: chorus-slide 0.55s var(--ease) 0.1s both; }
-  .chorus__line:hover .chorus__answer::before { animation: chorus-rule 0.45s var(--ease) both; }
-  .chorus__standing:hover .chorus__falling { animation: chorus-fall 0.6s var(--ease) both; }
+  /* Hover used to replay the whole entrance as a keyframe animation. Sweeping
+     the pointer down the three lines therefore re-fired three entrances, each
+     snapping back to its start frame before rising again — the jumpiest thing
+     in the section. It is a transition now: the rule reaches a little further
+     and the answer lifts out of grey, continuous in both directions, so
+     crossing the lines feels like passing a hand over them. */
+  .chorus__line:hover .chorus__answer { color: var(--bone); }
+  .chorus__line:hover .chorus__answer::before {
+    width: clamp(1.6rem, 3.4vw, 3.2rem);
+    background: var(--red-hot);
+  }
+  .chorus__answer { transition-property: opacity, transform, color; }
+  .chorus__answer::before { transition-property: transform, width, background; }
+  .chorus__line:hover .chorus__answer,
+  .chorus__line:hover .chorus__answer::before {
+    /* the hover response is quicker than the entrance, but still unhurried,
+       and carries no delay — the delays above are for the arrival only */
+    transition-duration: 0.9s;
+    transition-delay: 0s;
+  }
   .chorus__line, .chorus__standing { cursor: default; }
-}
-
-@keyframes chorus-rise {
-  from { transform: translateY(0.55em); opacity: 0.25; }
-  to   { transform: none; opacity: 1; }
-}
-@keyframes chorus-slide {
-  from { transform: translateX(-0.75rem); opacity: 0; }
-  to   { transform: none; opacity: 1; }
-}
-@keyframes chorus-rule {
-  from { transform: scaleX(0); }
-  to   { transform: scaleX(1); }
-}
-/* the payoff line drops in, matching its entrance */
-@keyframes chorus-fall {
-  from { transform: translateY(-0.4em); opacity: 0; }
-  to   { transform: none; opacity: 1; }
 }
 
 /* — the rise, staggered — */
 
-.chorus .reveal { transform: translateY(2.5rem); }
+/* A short distance covered slowly reads as calm; a long distance covered
+   quickly reads as a jump. This travels a third of what it used to over more
+   than twice the time, and lands on --ease-soft, so the last few pixels drift
+   rather than snap. The faint scale settles the line into the page with it. */
+/* Longhands, not the `transition` shorthand: the shorthand carries an implicit
+   transition-delay: 0s, and at (0,2,0) it outranks the bare `.chorus__standing`
+   below, which flattened the payoff line's 1.05s wait to nothing. Measured —
+   it was peaking at 39ms alongside the first line instead of after the third. */
+.chorus .reveal {
+  transform: translateY(0.9rem) scale(0.994);
+  transition-property: opacity, transform;
+  transition-duration: 1.8s;
+  transition-timing-function: var(--ease-soft);
+}
+
+/* Wide enough apart that the three lines arrive one at a time and the payoff
+   waits for them, instead of the four landing as one clump. */
 .chorus__line:nth-of-type(1) { transition-delay: 0.00s; }
-.chorus__line:nth-of-type(2) { transition-delay: 0.13s; }
-.chorus__line:nth-of-type(3) { transition-delay: 0.26s; }
-.chorus__standing            { transition-delay: 0.40s; }
+.chorus__line:nth-of-type(2) { transition-delay: 0.34s; }
+.chorus__line:nth-of-type(3) { transition-delay: 0.68s; }
+/* `.chorus` qualifier is load-bearing. Bare `.chorus__standing` is (0,1,0),
+   which ties with the base `.reveal` shorthand — and that sets delay 0s and
+   sits later in the file, so it won and the payoff line arrived in step with
+   the first line instead of after the third. It had been landing early since
+   the stagger was written; the per-line rules only escaped it because
+   :nth-of-type takes them to (0,2,0). */
+.chorus .chorus__standing    { transition-delay: 1.05s; }
 
 @media (max-width: 620px) {
   /* Stacked. `display: block` on the row alone was not enough: the word and
@@ -659,11 +689,9 @@ a { color: inherit; }
   .chorus__answer,
   .chorus__falling { opacity: 1; transform: none; }
   .chorus__answer::before { transform: scaleX(1); }
-  /* no hover replay either */
-  .chorus__line:hover .chorus__word,
-  .chorus__line:hover .chorus__answer,
-  .chorus__line:hover .chorus__answer::before,
-  .chorus__standing:hover .chorus__falling { animation: none; }
+  /* The hover response is a colour and a width now, not a replayed entrance,
+     so it is left alone here — the global rule above already flattens its
+     duration, which leaves the state change without the movement. */
 }
 
 /* ─────────────── story ─────────────── */
@@ -1059,6 +1087,258 @@ a { color: inherit; }
   font-size: 0.9rem;
 }
 .shop__add { width: 100%; }
+
+/* Cards are links now — the size and colour choice moved to the product page,
+   where there is room to show what is being chosen between. */
+.shop__link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+.shop__cta {
+  display: block;
+  padding: 0 clamp(1rem, 2vw, 1.5rem) 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ash);
+  transition: color 0.25s var(--ease);
+}
+.shop__item:hover .shop__cta,
+.shop__link:focus-visible .shop__cta { color: var(--bone); }
+
+.shop__more { margin: clamp(2.5rem, 6vw, 4rem) 0 0; }
+
+/* ─────────────── shop / product pages ─────────────── */
+
+.page { display: flex; flex-direction: column; min-height: 100vh; }
+.page main { flex: 1 0 auto; }
+
+.pagehead {
+  border-bottom: 1px solid var(--line-soft);
+  background: var(--ink);
+}
+.pagehead__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-top: 1.1rem;
+  padding-bottom: 1.1rem;
+}
+.pagehead__home img { display: block; width: auto; height: clamp(1.5rem, 3.5vw, 2.1rem); }
+.pagehead__nav {
+  display: flex;
+  gap: clamp(1rem, 3vw, 2rem);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.pagehead__nav a { color: var(--ash); text-decoration: none; transition: color 0.25s var(--ease); }
+.pagehead__nav a:hover,
+.pagehead__nav a[aria-current] { color: var(--bone); }
+
+.shop--page { background: var(--ink); border-top: 0; }
+.shop--page .section-title { margin-bottom: 1rem; }
+
+.crumb {
+  padding-top: clamp(1.5rem, 4vw, 2.5rem);
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.crumb a { color: var(--ash); text-decoration: none; transition: color 0.25s var(--ease); }
+.crumb a:hover { color: var(--bone); }
+
+.product { padding: clamp(2rem, 5vw, 3.5rem) 0 var(--sect); }
+.product__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(2rem, 5vw, 4rem);
+}
+@media (min-width: 900px) {
+  .product__grid { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); align-items: start; }
+}
+
+.product__stage {
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: var(--ink-2);
+  border: 1px solid var(--line-soft);
+}
+.product__stage img { display: block; width: 100%; height: 100%; object-fit: contain; }
+
+.product__thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+}
+.product__thumb {
+  width: clamp(3.5rem, 7vw, 4.75rem);
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  background: var(--ink-2);
+  border: 1px solid var(--line-soft);
+  cursor: pointer;
+  transition: border-color 0.25s var(--ease), opacity 0.25s var(--ease);
+  opacity: 0.65;
+}
+.product__thumb img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.product__thumb:hover { opacity: 1; }
+.product__thumb.is-on { border-color: var(--bone); opacity: 1; }
+
+.product__name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.9rem, 4.5vw, 3.1rem);
+  line-height: 1.04;
+  text-transform: uppercase;
+  color: var(--bone);
+  margin: 0 0 0.6rem;
+}
+.product__price {
+  font-family: var(--font-mono);
+  font-size: 1.0625rem;
+  color: var(--bone);
+  margin: 0 0 clamp(1.5rem, 4vw, 2.25rem);
+}
+
+.product__option { margin: 0 0 clamp(1.25rem, 3vw, 1.75rem); }
+.product__option-label {
+  display: block;
+  margin-bottom: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+.product__option-label b { color: var(--bone); font-weight: 400; }
+
+.product__swatches, .product__sizes { display: flex; flex-wrap: wrap; gap: 0.55rem; }
+
+.product__swatch {
+  /* 44px, because a colour chip is a touch target before it is a decoration */
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  cursor: pointer;
+  background: var(--swatch);
+  border: 1px solid var(--line);
+  box-shadow: inset 0 0 0 2px var(--ink-2);
+  transition: box-shadow 0.25s var(--ease), border-color 0.25s var(--ease);
+}
+.product__swatch:hover { border-color: var(--ash); }
+.product__swatch.is-on { border-color: var(--bone); box-shadow: inset 0 0 0 2px var(--ink-2), 0 0 0 1px var(--bone); }
+
+.product__size {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 0.85rem;
+  cursor: pointer;
+  background: var(--ink-3);
+  color: var(--bone);
+  border: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: border-color 0.25s var(--ease), background-color 0.25s var(--ease), color 0.25s var(--ease);
+}
+.product__size:hover:not(:disabled) { border-color: var(--ash); }
+.product__size.is-on { background: var(--bone); color: var(--ink); border-color: var(--bone); }
+.product__size:disabled {
+  cursor: not-allowed;
+  opacity: 0.32;
+  /* struck through, so "sold out in this colour" is not carried by opacity
+     alone — the same information without relying on colour or contrast */
+  text-decoration: line-through;
+}
+
+.product__add { width: 100%; margin-top: 0.5rem; }
+.product__add:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.product__note {
+  margin: 0.9rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+.product__desc {
+  margin-top: clamp(2rem, 5vw, 3rem);
+  padding-top: clamp(1.5rem, 4vw, 2rem);
+  border-top: 1px solid var(--line-soft);
+  color: var(--ash);
+  max-width: 60ch;
+}
+.product__desc p { margin: 0 0 1rem; line-height: 1.7; }
+.product__features {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+.product__features li {
+  position: relative;
+  padding-left: 1.1rem;
+  line-height: 1.55;
+}
+.product__features li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.68em;
+  width: 0.4rem;
+  height: 1px;
+  background: var(--red-hot);
+}
+
+.product__spec {
+  display: grid;
+  gap: 0.5rem 1.5rem;
+  margin: 1.5rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+}
+.product__spec > div { display: flex; gap: 0.75rem; }
+.product__spec dt { color: var(--ash); text-transform: uppercase; min-width: 5rem; }
+.product__spec dd { margin: 0; color: var(--bone); }
+
+.pagefoot {
+  border-top: 1px solid var(--line-soft);
+  padding: 2rem 0;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+.pagefoot__inner { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; }
+.pagefoot p { margin: 0; }
+.pagefoot a { color: var(--ash); text-decoration: none; transition: color 0.25s var(--ease); }
+.pagefoot a:hover { color: var(--bone); }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
 
 /* ─────────────── cart ─────────────── */
 

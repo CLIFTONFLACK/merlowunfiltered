@@ -53,7 +53,7 @@ const TRACKS = [
   { artist: 'Black Rosen',        genre: 'Rock Anthem' },
 ];
 
-const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const reduceMotion = window.MerlowReveal.reduceMotion;
 
 /* ───────────────────────────────────────────────────────────
    2. Tracklist
@@ -169,41 +169,10 @@ function buildVideoSlots() {
    4. Scroll reveal
    ─────────────────────────────────────────────────────────── */
 
-function initReveal() {
-  if (reduceMotion || !('IntersectionObserver' in window)) {
-    document.querySelectorAll('.reveal').forEach((el) => el.classList.add('is-in'));
-    // Later arrivals still need showing — see the note below.
-    watchForLateReveals((el) => el.classList.add('is-in'));
-    return;
-  }
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (!entry.isIntersecting) return;
-      entry.target.classList.add('is-in');
-      io.unobserve(entry.target);
-    });
-  }, { rootMargin: '0px 0px -12% 0px', threshold: 0.08 });
-
-  document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
-  watchForLateReveals((el) => io.observe(el));
-}
-
-/* Anything injected after boot carrying `.reveal` — the shop's status and
-   error messages, for one — was never picked up, because the sweep above only
-   ever ran once. Those elements sat at opacity 0 permanently, so a failed shop
-   load rendered as blank space instead of its message. */
-function watchForLateReveals(handle) {
-  if (!('MutationObserver' in window)) return;
-  new MutationObserver((records) => {
-    records.forEach((rec) => {
-      rec.addedNodes.forEach((node) => {
-        if (node.nodeType !== 1) return;
-        if (node.classList.contains('reveal')) handle(node);
-        node.querySelectorAll?.('.reveal').forEach(handle);
-      });
-    });
-  }).observe(document.body, { childList: true, subtree: true });
-}
+/* Lives in js/reveal.js now, because /shop and the product pages need it too
+   and an element carrying `.reveal` on a page without it never becomes
+   visible. */
+const initReveal = () => window.MerlowReveal.init();
 
 /* ───────────────────────────────────────────────────────────
    5. Hero video
@@ -270,112 +239,31 @@ function initStoryVideos() {
    Stripe.js or publishable key is needed on this page at all.
    ─────────────────────────────────────────────────────────── */
 
-const CART_KEY = 'merlow-cart-v1';
+const { money, escapeHtml, priceLabel, productHref } = window.Merlow;
 
-let shopCatalog = [];
-let cart = loadCart();
+/* How many products the home page previews before sending you to /shop. */
+const HOME_PREVIEW = 3;
 
-function loadCart() {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveCart() {
-  localStorage.setItem(CART_KEY, JSON.stringify(cart));
-}
-
-function money(amount, currency) {
-  try {
-    return new Intl.NumberFormat('en-GB', { style: 'currency', currency }).format(amount);
-  } catch {
-    return `${amount.toFixed(2)} ${currency}`;
-  }
-}
-
-function escapeHtml(str) {
-  return String(str).replace(/[&<>"']/g, (c) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-  }[c]));
-}
-
-function findVariant(variantId) {
-  for (const product of shopCatalog) {
-    const variant = product.variants.find((v) => v.id === variantId);
-    if (variant) return { product, variant };
-  }
-  return null;
-}
-
-function addToCart(variantId, quantity) {
-  const existing = cart.find((item) => item.variantId === variantId);
-  if (existing) {
-    existing.quantity = Math.min(10, existing.quantity + quantity);
-  } else {
-    cart.push({ variantId, quantity });
-  }
-  saveCart();
-  renderCart();
-  openCart();
-}
-
-function removeFromCart(variantId) {
-  cart = cart.filter((item) => item.variantId !== variantId);
-  saveCart();
-  renderCart();
-}
-
-function setQuantity(variantId, quantity) {
-  if (quantity < 1) return removeFromCart(variantId);
-  const item = cart.find((i) => i.variantId === variantId);
-  if (!item) return;
-  item.quantity = Math.min(10, quantity);
-  saveCart();
-  renderCart();
-}
-
-/* Cheapest variant, and whether the others cost more — a jacket priced per size
-   should read "from $113.50" rather than quoting one size as though it were the
-   price. Returns null for a product with nothing purchasable. */
-function priceLabel(variants) {
-  if (!variants.length) return null;
-  const low = Math.min(...variants.map((v) => v.price));
-  const high = Math.max(...variants.map((v) => v.price));
-  const amount = money(low, variants[0].currency);
-  return high > low
-    ? `<span class="shop__price-from">from</span>${escapeHtml(amount)}`
-    : escapeHtml(amount);
-}
-
+/* The home cards are a window onto the shop, not the shop itself: picture,
+   name, price, and a way through. Sizes and colours are chosen on the product
+   page, where there is room to show what you are choosing between. */
 function renderProductCard(product) {
   const variants = product.variants || [];
   const image = product.thumbnail || (variants[0] && variants[0].image) || '';
   const price = priceLabel(variants);
-  const options = variants
-    .map((v) => `<option value="${v.id}">${escapeHtml(v.name)} — ${money(v.price, v.currency)}</option>`)
-    .join('');
 
   return `
     <li class="shop__item reveal">
-      <span class="shop__media">
-        ${image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(product.name)}" width="800" height="800" loading="lazy" decoding="async">` : ''}
-      </span>
-      <span class="shop__meta">
-        <span class="shop__name">${escapeHtml(product.name)}</span>
-        ${price ? `<span class="shop__price">${price}</span>` : ''}
-      </span>
-      ${variants.length ? `
-        <form class="shop__form" data-add-to-cart="${product.id}">
-          <label class="shop__label" for="variant-${product.id}">Size / option</label>
-          <select class="shop__select" id="variant-${product.id}" required>
-            <option value="" disabled selected>Choose an option</option>
-            ${options}
-          </select>
-          <button class="btn btn--line shop__add" type="submit">Add to cart</button>
-        </form>` : `<p class="shop__note">Currently unavailable</p>`}
+      <a class="shop__link" href="${escapeHtml(productHref(product))}">
+        <span class="shop__media">
+          ${image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(product.name)}" width="800" height="800" loading="lazy" decoding="async">` : ''}
+        </span>
+        <span class="shop__meta">
+          <span class="shop__name">${escapeHtml(product.name)}</span>
+          ${price ? `<span class="shop__price">${price}</span>` : ''}
+        </span>
+        <span class="shop__cta">${variants.length ? 'View' : 'Currently unavailable'}</span>
+      </a>
     </li>`;
 }
 
@@ -387,150 +275,25 @@ async function loadShop() {
     const res = await fetch('/api/products');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    shopCatalog = Array.isArray(data.products) ? data.products : [];
+    const products = Array.isArray(data.products) ? data.products : [];
 
-    if (!shopCatalog.length) {
+    if (!products.length) {
       grid.innerHTML = '<li class="shop__status reveal">The shop is being stocked — check back soon.</li>';
       return;
     }
 
-    grid.innerHTML = shopCatalog.map(renderProductCard).join('');
-    grid.querySelectorAll('[data-add-to-cart]').forEach((form) => {
-      form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const select = form.querySelector('select');
-        const variantId = Number(select.value);
-        if (!variantId) return;
-        addToCart(variantId, 1);
-      });
-    });
-    renderCart();
+    grid.innerHTML = products.slice(0, HOME_PREVIEW).map(renderProductCard).join('');
+
+    // Only worth pointing at the full shop when there is more behind it.
+    const more = document.getElementById('shopMore');
+    if (more) {
+      more.hidden = false;
+      const rest = products.length - HOME_PREVIEW;
+      more.textContent = rest > 0 ? `See all ${products.length} pieces` : 'See the full shop';
+    }
   } catch (err) {
     grid.innerHTML = '<li class="shop__status reveal">Couldn&rsquo;t load the shop right now — refresh to try again.</li>';
   }
-}
-
-function renderCart() {
-  const countEl = document.getElementById('cartCount');
-  const itemsEl = document.getElementById('cartItems');
-  const totalEl = document.getElementById('cartTotal');
-  const toggleEl = document.getElementById('cartToggle');
-  const checkoutBtn = document.getElementById('cartCheckout');
-  if (!itemsEl) return;
-
-  const count = cart.reduce((sum, i) => sum + i.quantity, 0);
-  if (countEl) countEl.textContent = String(count);
-  if (toggleEl) toggleEl.hidden = count === 0;
-
-  if (!cart.length) {
-    itemsEl.innerHTML = '<li class="cart__empty">Your cart is empty.</li>';
-    if (totalEl) totalEl.textContent = '—';
-    if (checkoutBtn) checkoutBtn.disabled = true;
-    return;
-  }
-
-  let total = 0;
-  let currency = 'GBP';
-  itemsEl.innerHTML = cart.map((item) => {
-    const found = findVariant(item.variantId);
-    if (!found) return '';
-    const { product, variant } = found;
-    total += variant.price * item.quantity;
-    currency = variant.currency || currency;
-    return `
-      <li class="cart__item" data-variant="${variant.id}">
-        <span class="cart__item-name">${escapeHtml(product.name)} — ${escapeHtml(variant.name)}</span>
-        <span class="cart__item-qty">
-          <button type="button" data-qty="-1" aria-label="Decrease quantity">&minus;</button>
-          <span>${item.quantity}</span>
-          <button type="button" data-qty="1" aria-label="Increase quantity">+</button>
-        </span>
-        <span class="cart__item-price">${money(variant.price * item.quantity, variant.currency)}</span>
-        <button type="button" class="cart__item-remove" data-remove aria-label="Remove item">&times;</button>
-      </li>`;
-  }).join('');
-
-  itemsEl.querySelectorAll('[data-qty]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const variantId = Number(btn.closest('.cart__item').dataset.variant);
-      const item = cart.find((i) => i.variantId === variantId);
-      if (item) setQuantity(variantId, item.quantity + Number(btn.dataset.qty));
-    });
-  });
-  itemsEl.querySelectorAll('[data-remove]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      removeFromCart(Number(btn.closest('.cart__item').dataset.variant));
-    });
-  });
-
-  if (totalEl) totalEl.textContent = money(total, currency);
-  if (checkoutBtn) checkoutBtn.disabled = false;
-}
-
-function openCart() {
-  const drawer = document.getElementById('cartDrawer');
-  if (drawer) drawer.hidden = false;
-}
-
-function closeCart() {
-  const drawer = document.getElementById('cartDrawer');
-  if (drawer) drawer.hidden = true;
-}
-
-function handleOrderReturn() {
-  const params = new URLSearchParams(window.location.search);
-  const status = params.get('order');
-  if (!status) return;
-
-  const note = document.getElementById('cartNote');
-  if (status === 'success') {
-    cart = [];
-    saveCart();
-    if (note) note.textContent = 'Thanks — your order is confirmed. A receipt is on its way to your email.';
-    openCart();
-  } else if (note) {
-    note.textContent = 'Checkout was cancelled — your cart is still here.';
-  }
-
-  history.replaceState(null, '', window.location.pathname + window.location.hash);
-}
-
-function initCart() {
-  const toggle = document.getElementById('cartToggle');
-  const close = document.getElementById('cartClose');
-  const checkout = document.getElementById('cartCheckout');
-  const note = document.getElementById('cartNote');
-
-  if (toggle) toggle.addEventListener('click', openCart);
-  if (close) close.addEventListener('click', closeCart);
-
-  if (checkout) {
-    checkout.addEventListener('click', async () => {
-      if (!cart.length) return;
-      checkout.disabled = true;
-      checkout.textContent = 'Redirecting…';
-      if (note) note.textContent = '';
-      try {
-        const res = await fetch('/api/create-checkout-session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            items: cart.map((i) => ({ variantId: i.variantId, quantity: i.quantity })),
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok || !data.url) throw new Error(data.error || 'Checkout failed');
-        window.location.href = data.url;
-      } catch (err) {
-        if (note) note.textContent = 'Couldn’t start checkout — try again in a moment.';
-        checkout.disabled = false;
-        checkout.textContent = 'Checkout';
-      }
-    });
-  }
-
-  handleOrderReturn();
-  renderCart();
 }
 
 /* ───────────────────────────────────────────────────────────
@@ -560,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initReveal();
   initHeroVideo();
   initStoryVideos();
-  initCart();
+  window.Merlow.init();
   loadShop();
   initSignup();
 

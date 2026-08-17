@@ -240,6 +240,7 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
+    window.MerlowReveal.init();
     window.Merlow.init();
     load();
     const year = document.getElementById('year');

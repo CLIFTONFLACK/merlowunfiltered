@@ -45,6 +45,8 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
+    // Without this, everything carrying `.reveal` stays at opacity 0 for good.
+    window.MerlowReveal.init();
     window.Merlow.init();
     load();
     const year = document.getElementById('year');

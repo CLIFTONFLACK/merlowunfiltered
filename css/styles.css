@@ -1282,6 +1282,27 @@ a { color: inherit; }
   max-width: 60ch;
 }
 .product__desc p { margin: 0 0 1rem; line-height: 1.7; }
+.product__features {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+.product__features li {
+  position: relative;
+  padding-left: 1.1rem;
+  line-height: 1.55;
+}
+.product__features li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.68em;
+  width: 0.4rem;
+  height: 1px;
+  background: var(--red-hot);
+}
 
 .product__spec {
   display: grid;

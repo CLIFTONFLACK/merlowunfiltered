@@ -124,18 +124,44 @@
     ].filter(Boolean).join('');
 
     return `
-      ${p.description ? `
-        <div class="product__desc">
-          ${p.description.split(/\n{2,}|\r\n\r\n/).filter(Boolean)
-            .map((para) => `<p>${escapeHtml(para.trim())}</p>`).join('')}
-        </div>` : ''}
+      ${p.description ? `<div class="product__desc">${describe(p.description)}</div>` : ''}
       ${spec ? `<dl class="product__spec">${spec}</dl>` : ''}`;
+  }
+
+  /* Printful writes a prose paragraph, then the spec as lines each opening with
+     a "·". Run together as one paragraph that reads as a wall; as a list it
+     reads as a list. Blocks are split on blank lines, and any block whose lines
+     are mostly bullets becomes one. */
+  function describe(text) {
+    return text
+      .split(/\r?\n\s*\r?\n/)
+      .map((block) => block.trim())
+      .filter(Boolean)
+      .map((block) => {
+        const lines = block.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        const bullets = lines.filter((l) => /^[·•*•-]\s+/.test(l));
+        if (bullets.length && bullets.length >= lines.length - 1) {
+          return `<ul class="product__features">${lines
+            .map((l) => `<li>${escapeHtml(l.replace(/^[·•*•-]\s+/, ''))}</li>`)
+            .join('')}</ul>`;
+        }
+        return `<p>${escapeHtml(lines.join(' '))}</p>`;
+      })
+      .join('');
   }
 
   function render() {
     const p = state.product;
     const chosen = selected();
     const needsChoice = !isSimple(p) && !chosen;
+
+    /* Name what is actually missing. "Choose your options" on a product whose
+       colour was preselected leaves you looking for a second choice that
+       isn't there. */
+    const missing = [
+      p.colors.length && !state.color ? 'a colour' : null,
+      p.sizes.length && !state.size ? 'a size' : null,
+    ].filter(Boolean);
 
     document.getElementById('product').innerHTML = `
       <div class="wrap product__grid">
@@ -146,7 +172,7 @@
           ${optionsHtml(p)}
           ${p.variants.length ? `
             <button class="btn btn--primary product__add" id="addToCart" type="button" ${needsChoice ? 'disabled' : ''}>
-              ${needsChoice ? 'Choose your options' : 'Add to cart'}
+              ${needsChoice ? `Choose ${missing.join(' and ')}` : 'Add to cart'}
             </button>
             <p class="product__note">Made to order. Shipped worldwide, usually within 3–7 days of printing.</p>
           ` : '<p class="shop__note">Currently unavailable</p>'}

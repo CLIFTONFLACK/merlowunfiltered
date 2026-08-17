@@ -8,11 +8,22 @@ There is no site header or nav bar by design: the page opens straight into the h
 video and is navigated by scrolling.
 
 ```
-index.html        the whole page
+index.html        the home page
+shop.html         /shop — the full catalog
+product.html      /shop/:id — one product (rewritten to, see vercel.json)
 css/styles.css    design system + layout
-js/main.js        tracklist, YouTube slots, nav, reveals
+js/main.js        home page: tracklist, YouTube slots, hero, story, shop preview
+js/shop.js        /shop
+js/product.js     the product page
+js/cart.js        cart + checkout, shared by all three
+js/reveal.js      scroll reveal, shared by all three
 media/            web-optimised copies of the release assets
 ```
+
+`cart.js` and `reveal.js` load before every page script. Both are shared on
+purpose: the cart must render the same on all three pages, and `.reveal` sits at
+opacity 0 until the observer reaches it, so a page that carries the class
+without running the observer shows nothing at all.
 
 ---
 
@@ -97,9 +108,20 @@ api/webhook.js                POST — Stripe -> Printful order creation
 
 **Adding products.** Nothing here needs editing — add the product in Printful and it appears
 on the site within about a minute (the catalog is cached for 60s per warm lambda, and the
-response carries `s-maxage=60`). Cards render from whatever the store returns, so the size /
-option picker and the "from" price follow the variants you sync. `lib/printful.js` walks every
-page of `/store/products`, so the catalog is not capped at Printful's default page of 20.
+response carries `s-maxage=60`). It gets a card on `/shop`, a preview slot on the home page if
+it is one of the first three, and its own page at `/shop/:id`. Colours, sizes, prices and the
+gallery all follow the variants you sync. `lib/printful.js` walks every page of
+`/store/products`, so the catalog is not capped at Printful's default page of 20.
+
+**Where the product page's copy comes from.** A Printful *sync* product carries only a name,
+a thumbnail and its variants — no description, no colour names, no brand. Those live on the
+*catalog* product it was made from, so `getProductDetail` follows `product_id` off the first
+variant to `/products/:id` and merges the two. If that call fails the page still prices and
+sells correctly; it just loses the blurb and the swatch colours.
+
+```
+api/product.js                GET ?id= — one product, enriched
+```
 
 **Required Vercel environment variables:**
 

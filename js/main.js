@@ -20,21 +20,21 @@ const PLAYLIST_URL = 'https://www.youtube.com/playlist?list=PLEjCGD4tGVKQ';
 const VIDEOS = {
   featured:   '-XMXp3gifag',   // the Marcus Whitefield cut, as the album's calling card
 
-  'track-01': '',              // Caldwell            — Indie UK        (not yet released)
+  'track-01': 'A3Bn3vJVUB8',   // Caldwell            — Indie UK
   'track-02': '-XMXp3gifag',   // Marcus Whitefield   — Indie UK
   'track-03': 'meuu3SeXyaE',   // Clara.B.            — A Capella
   'track-04': '_HOLLTDt3co',   // Ellison Sisters     — A Capella
   'track-05': 'zLWAso5D7yc',   // Edith Vale          — Country Rock
-  'track-06': '',              // Ashworth            — Folk Anthem     (not yet released)
+  'track-06': 'lgwP56wD8so',   // Ashworth            — Folk Anthem
   'track-07': 'SYB_n0iSxng',   // Rachel Heart        — Folk Anthem
   'track-08': 'bV3C4U2hQcQ',   // Darius Kohan        — OldSkool Rap
-  'track-09': '',              // Ben-D               — OldSkool Rap    (not yet released)
+  'track-09': 'ZxZVDCCGOG4',   // Ben-D               — OldSkool Rap
   'track-10': 'I6I3zKhUOaE',   // The Hallorans       — Power Pop
   'track-11': '7u3vxmxrJMM',   // Five Roses          — Power Pop
   'track-12': 'jNuNULtmwAs',   // The Nazarians       — Rap Funk
   'track-13': 'MD9uI8PYPf0',   // Oko Funk Syndicate  — Rap Funk
   'track-14': 'ZuS1k-Bj0j8',   // Mansour Drive       — Rock Anthem
-  'track-15': '',              // Black Rosen         — Rock Anthem     (not yet released)
+  'track-15': 'VurVtUUdo_s',   // Black Rosen         — Rock Anthem
 };
 
 /* The record. Order = tracklist order. */

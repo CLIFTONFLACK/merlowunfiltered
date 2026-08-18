@@ -41,20 +41,19 @@ https://www.youtube.com/watch?v=dQw4w9WgXcQ
 ```js
 const VIDEOS = {
   featured:   '-XMXp3gifag',   // the Marcus Whitefield cut
-  'track-01': '',              // Caldwell — Indie UK (not yet released)
+  'track-01': 'A3Bn3vJVUB8',   // Caldwell — Indie UK
   'track-02': '-XMXp3gifag',   // Marcus Whitefield — Indie UK
   ...
 };
 ```
 
-**Current state: 11 of the 15 are live.** Caldwell, Ashworth, Ben-D and Black Rosen
-have not been published to the channel yet — those four are deliberately left empty.
-Paste each ID in as it goes up; nothing else needs touching.
+**Current state: all fifteen are live and wired.** Nothing is pending.
 
-Any slot still empty renders a **"Not yet released"** tile naming the video that
-belongs there and pointing at the channel, and its tracklist row is marked `Soon`.
-So the page stays correctly laid out, and a visitor opening one of the four is told
-what they are looking at rather than shown an internal note.
+The empty-slot handling is still there and still works, because a video can be
+pulled or replaced later: a slot left empty renders a **"Not yet released"** tile
+naming the version that belongs there and pointing at the channel, and its
+tracklist row is marked `Soon`. So the page stays correctly laid out, and a
+visitor is told what they are looking at rather than shown an internal note.
 
 The channel and playlist URLs live in `CHANNEL_URL` / `PLAYLIST_URL` directly above
 `VIDEOS`:

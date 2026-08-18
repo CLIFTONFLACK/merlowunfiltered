@@ -791,6 +791,7 @@ a { color: inherit; }
 .album__links { display: flex; flex-wrap: wrap; gap: 0.875rem; }
 
 .featured { border-top: 1px solid var(--line); padding-top: clamp(2rem, 5vw, 3rem); }
+.featured__more { margin: 1.5rem 0 0; }
 
 /* ─────────────── youtube slots ─────────────── */
 
@@ -844,6 +845,11 @@ a { color: inherit; }
   color: rgba(142,149,156,0.65);
   margin: 0;
 }
+.yt__hint a {
+  color: var(--ash);
+  text-underline-offset: 0.25em;
+}
+.yt__hint a:hover { color: var(--red-hot); }
 
 /* — filled state: click-to-load facade — */
 .yt__facade {
@@ -933,6 +939,19 @@ a { color: inherit; }
   text-transform: uppercase;
   color: var(--ash);
   white-space: nowrap;
+}
+
+/* Unreleased rows read a shade quieter than the eleven you can actually play,
+   without dropping out of the numbered sequence — the record is still fifteen. */
+.track--pending .track__artist { color: var(--ash); }
+
+.track__soon {
+  display: inline-block;
+  margin-left: 0.6rem;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid var(--line);
+  color: rgba(142,149,156,0.9);
+  letter-spacing: 0.14em;
 }
 
 .track__chev {

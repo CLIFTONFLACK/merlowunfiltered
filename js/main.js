@@ -10,28 +10,31 @@
    Paste the 11-character YouTube video ID between the quotes.
    From https://www.youtube.com/watch?v=dQw4w9WgXcQ  →  'dQw4w9WgXcQ'
 
-   Any slot left empty renders as a labelled placeholder tile,
-   so the layout stays correct while you fill them in.
+   Any slot left empty renders as a "not yet released" tile, so
+   the layout stays correct while the rest of the record lands.
    ─────────────────────────────────────────────────────────── */
 
-const VIDEOS = {
-  featured:   '9Us7JsDWFEg',   // Story 03 — official lyric video
+const CHANNEL_URL = 'https://www.youtube.com/@MerlowHQ';
+const PLAYLIST_URL = 'https://www.youtube.com/playlist?list=PLEjCGD4tGVKQ';
 
-  'track-01': '',   // Caldwell            — Indie UK
-  'track-02': '',   // Marcus Whitefield   — Indie UK
-  'track-03': '',   // Clara.B.            — A Capella
-  'track-04': '',   // Ellison Sisters     — A Capella
-  'track-05': '',   // Edith Vale          — Country Rock
-  'track-06': '',   // Ashworth            — Folk Anthem
-  'track-07': '',   // Rachel Heart        — Folk Anthem
-  'track-08': '',   // Darius Kohan        — OldSkool Rap
-  'track-09': '',   // Ben-D               — OldSkool Rap
-  'track-10': '',   // The Hallorans       — Power Pop
-  'track-11': '',   // Five Roses          — Power Pop
-  'track-12': '',   // The Nazarians       — Rap Funk
-  'track-13': '',   // Oko Funk Syndicate  — Rap Funk
-  'track-14': '',   // Mansour Drive       — Rock Anthem
-  'track-15': '',   // Black Rosen         — Rock Anthem
+const VIDEOS = {
+  featured:   '-XMXp3gifag',   // the Marcus Whitefield cut, as the album's calling card
+
+  'track-01': '',              // Caldwell            — Indie UK        (not yet released)
+  'track-02': '-XMXp3gifag',   // Marcus Whitefield   — Indie UK
+  'track-03': 'meuu3SeXyaE',   // Clara.B.            — A Capella
+  'track-04': '_HOLLTDt3co',   // Ellison Sisters     — A Capella
+  'track-05': 'zLWAso5D7yc',   // Edith Vale          — Country Rock
+  'track-06': '',              // Ashworth            — Folk Anthem     (not yet released)
+  'track-07': 'SYB_n0iSxng',   // Rachel Heart        — Folk Anthem
+  'track-08': 'bV3C4U2hQcQ',   // Darius Kohan        — OldSkool Rap
+  'track-09': '',              // Ben-D               — OldSkool Rap    (not yet released)
+  'track-10': 'I6I3zKhUOaE',   // The Hallorans       — Power Pop
+  'track-11': '7u3vxmxrJMM',   // Five Roses          — Power Pop
+  'track-12': 'jNuNULtmwAs',   // The Nazarians       — Rap Funk
+  'track-13': 'MD9uI8PYPf0',   // Oko Funk Syndicate  — Rap Funk
+  'track-14': 'ZuS1k-Bj0j8',   // Mansour Drive       — Rock Anthem
+  'track-15': '',              // Black Rosen         — Rock Anthem     (not yet released)
 };
 
 /* The record. Order = tracklist order. */
@@ -67,14 +70,19 @@ function buildTracklist() {
     const n = String(i + 1).padStart(2, '0');
     const panelId = `track-panel-${n}`;
 
+    /* A row with no video behind it still opens — it just opens onto the
+       "not yet released" tile. Say so on the row itself rather than making
+       someone click to find out. */
+    const pending = !(VIDEOS[`track-${n}`] || '').trim();
+
     const li = document.createElement('li');
-    li.className = 'track';
+    li.className = pending ? 'track track--pending' : 'track';
     li.innerHTML = `
       <button class="track__btn" type="button"
               aria-expanded="false" aria-controls="${panelId}">
         <span class="track__num">${n}</span>
         <span class="track__artist">${track.artist}</span>
-        <span class="track__genre">${track.genre}</span>
+        <span class="track__genre">${track.genre}${pending ? ' <span class="track__soon">Soon</span>' : ''}</span>
         <span class="track__chev" aria-hidden="true"></span>
       </button>
       <div class="track__panel" id="${panelId}" role="region"
@@ -110,11 +118,14 @@ function renderSlot(slot) {
   const id = (VIDEOS[key] || '').trim();
 
   if (!id) {
+    /* Public-facing, because this renders on the live site: a visitor opening
+       one of the tracks still to land should be told that, not shown the
+       source file it gets pasted into. */
     slot.innerHTML = `
       <div class="yt__placeholder">
-        <span class="yt__badge">YouTube ID pending</span>
+        <span class="yt__badge">Not yet released</span>
         <p class="yt__label">${title}</p>
-        <p class="yt__hint">js/main.js &rarr; VIDEOS['${key}']</p>
+        <p class="yt__hint">Dropping soon &mdash; <a href="${CHANNEL_URL}" rel="noopener">subscribe on YouTube</a></p>
       </div>`;
     return;
   }

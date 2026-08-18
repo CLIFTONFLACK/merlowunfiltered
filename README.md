@@ -40,14 +40,29 @@ https://www.youtube.com/watch?v=dQw4w9WgXcQ
 
 ```js
 const VIDEOS = {
-  featured:   '9Us7JsDWFEg',   // Story 03 — official lyric video (already set)
-  'track-01': '',              // Caldwell — Indie UK
+  featured:   '-XMXp3gifag',   // the Marcus Whitefield cut
+  'track-01': '',              // Caldwell — Indie UK (not yet released)
+  'track-02': '-XMXp3gifag',   // Marcus Whitefield — Indie UK
   ...
 };
 ```
 
-Any slot still empty shows a marked placeholder tile naming the video that belongs
-there, so the page stays correctly laid out while you fill them in.
+**Current state: 11 of the 15 are live.** Caldwell, Ashworth, Ben-D and Black Rosen
+have not been published to the channel yet — those four are deliberately left empty.
+Paste each ID in as it goes up; nothing else needs touching.
+
+Any slot still empty renders a **"Not yet released"** tile naming the video that
+belongs there and pointing at the channel, and its tracklist row is marked `Soon`.
+So the page stays correctly laid out, and a visitor opening one of the four is told
+what they are looking at rather than shown an internal note.
+
+The channel and playlist URLs live in `CHANNEL_URL` / `PLAYLIST_URL` directly above
+`VIDEOS`:
+
+```
+channel   https://www.youtube.com/@MerlowHQ
+playlist  https://www.youtube.com/playlist?list=PLEjCGD4tGVKQ
+```
 
 Once an ID is set the slot becomes a **click-to-load thumbnail** — the YouTube iframe
 is only injected when someone clicks play, so YouTube loads nothing (and sets nothing)

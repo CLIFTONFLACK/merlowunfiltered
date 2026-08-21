@@ -13,7 +13,7 @@
    ─────────────────────────────────────────────────────────── */
 
 (function () {
-  const { escapeHtml, money } = window.Merlow;
+  const { escapeHtml, money, mockup, productTitle, swatchColor } = window.Merlow;
 
   const state = { product: null, color: null, size: null };
 
@@ -53,19 +53,20 @@
 
   function galleryHtml(p) {
     if (!p.images.length) return '';
+    const title = productTitle(p);
     return `
       <div class="product__gallery">
         <div class="product__stage">
-          <img id="productImage" src="${escapeHtml(p.images[0])}" alt="${escapeHtml(p.name)}"
+          <img id="productImage" src="${escapeHtml(mockup(p.images[0]))}" alt="${escapeHtml(title)}"
                width="800" height="800" decoding="async">
         </div>
         ${p.images.length > 1 ? `
           <ul class="product__thumbs">
             ${p.images.map((src, n) => `
               <li>
-                <button type="button" class="product__thumb${n === 0 ? ' is-on' : ''}" data-image="${escapeHtml(src)}"
+                <button type="button" class="product__thumb${n === 0 ? ' is-on' : ''}" data-image="${escapeHtml(mockup(src))}"
                         aria-label="View image ${n + 1} of ${p.images.length}">
-                  <img src="${escapeHtml(src)}" alt="" width="200" height="200" loading="lazy" decoding="async">
+                  <img src="${escapeHtml(mockup(src, 200))}" alt="" width="200" height="200" loading="lazy" decoding="async">
                 </button>
               </li>`).join('')}
           </ul>` : ''}
@@ -92,7 +93,7 @@
             <button type="button" role="radio" aria-checked="${state.color === c.name}"
                     class="product__swatch${state.color === c.name ? ' is-on' : ''}"
                     data-color="${escapeHtml(c.name)}" title="${escapeHtml(c.name)}"
-                    style="--swatch: ${escapeHtml(c.code || '#555')}">
+                    style="--swatch: ${swatchColor(c.code)}">
               <span class="visually-hidden">${escapeHtml(c.name)}</span>
             </button>`).join('')}
         </div>
@@ -167,14 +168,14 @@
       <div class="wrap product__grid">
         ${galleryHtml(p)}
         <div class="product__body">
-          <h1 class="product__name">${escapeHtml(p.name)}</h1>
+          <h1 class="product__name">${escapeHtml(productTitle(p))}</h1>
           <p class="product__price">${priceHtml(p)}</p>
           ${optionsHtml(p)}
           ${p.variants.length ? `
             <button class="btn btn--primary product__add" id="addToCart" type="button" ${needsChoice ? 'disabled' : ''}>
               ${needsChoice ? `Choose ${missing.join(' and ')}` : 'Add to cart'}
             </button>
-            <p class="product__note">Made to order. Shipped worldwide, usually within 3–7 days of printing.</p>
+            <p class="product__note">Made to order, usually printed within 3–7 days. Postage is worked out from your country in the cart.</p>
           ` : '<p class="shop__note">Currently unavailable</p>'}
           ${detailsHtml(p)}
         </div>
@@ -187,6 +188,7 @@
     document.querySelectorAll('[data-image]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const img = document.getElementById('productImage');
+        // data-image is already the proxied URL, so this stays in one space.
         if (img) img.src = btn.dataset.image;
         document.querySelectorAll('.product__thumb').forEach((b) => b.classList.toggle('is-on', b === btn));
       });
@@ -217,7 +219,7 @@
         if (!chosen) return;
         window.Merlow.add({
           variantId: chosen.id,
-          name: state.product.name,
+          name: productTitle(state.product),
           variantName: [chosen.color, chosen.size].filter(Boolean).join(' / ') || chosen.name,
           price: chosen.price,
           currency: chosen.currency,
@@ -258,7 +260,7 @@
       if (state.product.colors.length === 1) state.color = state.product.colors[0].name;
       if (state.product.sizes.length === 1) state.size = state.product.sizes[0];
 
-      document.title = `${state.product.name} — MERLOW`;
+      document.title = `${productTitle(state.product)} — MERLOW`;
       render();
     } catch (err) {
       host.innerHTML = `<div class="wrap"><p class="shop__status">Couldn&rsquo;t load this product. <a href="/shop">Back to the shop</a>.</p></div>`;

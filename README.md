@@ -3,9 +3,8 @@
 Single static page for MERLOW and the debut collaborative album **UNFILTERED** —
 one song, fifteen collaborations, one shared voice.
 
-No build step, no framework, no dependencies. Open `index.html` or upload the folder.
-There is no site header or nav bar by design: the page opens straight into the hero
-video and is navigated by scrolling.
+No build step and no framework. The pages themselves have no dependencies; the
+`/api` functions have two (`stripe`, `sharp`) and Vercel installs them.
 
 ```
 index.html        the home page
@@ -15,15 +14,21 @@ css/styles.css    design system + layout
 js/main.js        home page: tracklist, YouTube slots, hero, story, shop preview
 js/shop.js        /shop
 js/product.js     the product page
-js/cart.js        cart + checkout, shared by all three
+js/cart.js        cart, postage, checkout — shared by all three
 js/reveal.js      scroll reveal, shared by all three
 media/            web-optimised copies of the release assets
+lib/, api/        the Printful and Stripe side — see "Shop" below
+test/             unit tests, and a check to run against a deployment
 ```
 
 `cart.js` and `reveal.js` load before every page script. Both are shared on
 purpose: the cart must render the same on all three pages, and `.reveal` sits at
 opacity 0 until the observer reaches it, so a page that carries the class
 without running the observer shows nothing at all.
+
+There is no site header or nav bar on the home page by design: it opens straight
+into the hero video and is navigated by scrolling. `/shop` and `/shop/:id` do
+carry one, because they are pages you can arrive at cold.
 
 ---
 
@@ -87,37 +92,37 @@ Everything in `media/` is a resized copy — the originals are untouched in
 | `chips.png` | chipped-paint mask for the three slogan lines, built from the chips inside the cover wordmark's strokes | `UNFILTERED-cover art.png` |
 | `chips-blue.png` | the same tile, alpha inverted and gamma-curved, painted deep navy — the worn-through undercoat on the H2/H3 headings | derived from `chips.png` |
 | `story-01..02.mp4` + `.jpg` | the two story clips and their poster frames — silent loops, `preload="none"`, started only when the band scrolls into view | `Clips/clips_Seedance/clip_01, 03` |
-| `merch-lion.jpg`, `merch-britain.jpg` | the two shop products | `T-Shirt Mockups/UnUnUn_Tshirt_Lion.png`, `..._Britain.png` |
 | `plate.jpg` | faint texture behind the chorus | `Design Mockups/UnUnUn_good.png` |
 | `favicon.png` (256), `favicon-180.png`, `favicon-32.png` | tab icon and apple-touch icon: the M mark, studio background keyed out to transparency, cropped to the mark, with a bone rim so the near-black half still reads on a dark browser tab | `M Logo.png` |
+
+`merch-lion.jpg` and `merch-britain.jpg` are still in `media/` and nothing points at
+them any more — the shop has come from Printful since the two static cards were
+replaced.
 
 The hero video must stay **silent** — browsers refuse to autoplay a clip with an audio
 track, and the page would fall back to the poster image.
 
-## Still to wire up
-
-- **Mailing list** — the footer form is a visual placeholder. It intercepts submit and
-  says so on screen; nothing is sent anywhere. Point it at Mailchimp / Buttondown /
-  ConvertKit when you have an account.
-- **Social links**: the four icons in the footer are `href="#"`. Replace with the real
-  Spotify / YouTube / Instagram / Apple Music URLs in `index.html`.
-
 ## Shop — Printful + Stripe
 
-The Shop section is no longer static. `js/main.js` fetches the live catalog from
-`/api/products` (a serverless function that proxies Printful, so the API token never
-reaches the browser) and renders each synced product with a size/option picker and an
-Add to cart button. The cart itself is `localStorage`. Checkout posts the cart to
-`/api/create-checkout-session`, which re-prices everything against Printful server-side,
-creates a Stripe Checkout Session, and returns its hosted URL — the browser is redirected
-there directly, so there's no Stripe.js on this page. `/api/webhook` listens for
+Nothing about the shop is written down in this repo. `js/main.js`, `js/shop.js` and
+`js/product.js` all read `/api/products`, a serverless function that proxies Printful so
+the API token never reaches the browser. The cart is `localStorage`. Checkout posts the
+cart to `/api/create-checkout-session`, which re-prices everything against Printful
+server-side, creates a Stripe Checkout Session and returns its hosted URL — the browser
+is redirected there, so there is no Stripe.js on the page. `/api/webhook` listens for
 `checkout.session.completed` and creates the matching order in Printful.
 
 ```
-lib/printful.js               shared Printful API client
-api/products.js               GET  — catalog for the frontend
+lib/printful.js                shared Printful API client
+lib/shipping.js                where we ship to, and how a country becomes a rate
+lib/mockup.js                  takes the backdrop off a product mockup
+api/products.js                GET  — catalog for the frontend
+api/product.js                 GET ?id= — one product, enriched
+api/mockup.js                  GET ?src= — one mockup, backdrop removed
+api/shipping-rates.js          GET  — the countries we ship to
+                               POST — Printful's rates for a cart and a country
 api/create-checkout-session.js POST — cart in, Stripe Checkout URL out
-api/webhook.js                POST — Stripe -> Printful order creation
+api/webhook.js                 POST — Stripe -> Printful order creation
 ```
 
 **Adding products.** Nothing here needs editing — add the product in Printful and it appears
@@ -127,49 +132,160 @@ it is one of the first three, and its own page at `/shop/:id`. Colours, sizes, p
 gallery all follow the variants you sync. `lib/printful.js` walks every page of
 `/store/products`, so the catalog is not capped at Printful's default page of 20.
 
-**Where the product page's copy comes from.** A Printful *sync* product carries only a name,
-a thumbnail and its variants — no description, no colour names, no brand. Those live on the
-*catalog* product it was made from, so `getProductDetail` follows `product_id` off the first
-variant to `/products/:id` and merges the two. If that call fails the page still prices and
-sells correctly; it just loses the blurb and the swatch colours.
+**Where the product copy comes from.** A Printful *sync* product carries only a name, a
+thumbnail and its variants — no description, no colour names, no brand. Those live on the
+*catalog* product it was made from, so `shape()` follows `product_id` off the first variant
+to `/products/:id` and merges the two. Those lookups are cached for half an hour and shared
+between products, so a shop full of the same blank costs one of them. If the call fails the
+page still prices and sells correctly; it just loses the blurb and the swatch colours.
 
-```
-api/product.js                GET ?id= — one product, enriched
-```
+**Product names.** Every product is called "… Official MERLOW …" in Printful, which is useful
+inside a Printful account and says nothing on MERLOW's own shop. `cleanTitle()` drops that
+phrase and tidies the separators it leaves behind, so the API returns both `name` (exactly as
+Printful has it) and `title` (what the card shows). It is deliberately narrow — one known
+phrase — and falls back to the original for anything it would otherwise leave blank.
 
-**Required Vercel environment variables:**
+### Mockups have no backdrop
+
+Printful returns two kinds of image for the same store. The per-variant mockups come with an
+alpha channel; the product-level `thumbnail_url` is the same garment flattened onto white. On
+this page a white box is loud, and the two kinds were sitting side by side in the same grid.
+
+Every mockup the site renders now goes through **`/api/mockup`**, which fetches it from
+Printful, takes the backdrop off and serves WebP — or PNG, by `Accept` — cached at the edge
+for a year. Images that are already cut out pass through untouched.
+
+The cut is careful, because the white Adidas cap is the same white as the backdrop it stands
+on. The backdrop is found by flooding inward from the border, so only backdrop *connected to
+the edge* goes; and if the flood turns out to have emptied the middle of the frame it is
+thrown away and retried hugging the backdrop's own sampled colour. If that leaks too, the
+original is served unchanged. A mockup with a white box behind it is worse than one without;
+a mockup with a hole through the product is worse than both.
+
+If anything in there fails, the request redirects to the original Printful URL — the shop
+keeps working, it just keeps its backdrop.
+
+`CARD_IMAGE` in `lib/printful.js` chooses which mockup fronts a card: the variant one you
+picked for the first colourway (default), or Printful's own main image for the product. Both
+come out with no backdrop; it only changes the composition, and the variant mockups are
+sometimes lifestyle shots. Changing which mockup one product uses is a Printful job, not a
+code one.
+
+### Shipping is quoted from Printful
+
+Stripe's hosted Checkout can only offer shipping rates that were fixed when the session was
+created — it cannot re-quote once the buyer types an address. Printful will not quote against
+a bare country. So the cart asks for a destination country, `/api/shipping-rates` prices the
+actual cart against Printful for it, and the Stripe session is then **locked to that one
+country** with Printful's own rates as the only options. Nobody is quoted for London and
+shipped to Sydney.
+
+`SHIP_TO` in `lib/shipping.js` is the list of countries offered, each with a real address
+inside it used only to obtain that country's rate — Printful prices apparel as a flat rate per
+country, so the anchor's answer is the country's answer. Add a country by adding a row. Where
+it isn't the country's answer — somewhere remote inside a large country — Printful can charge
+a little more than the buyer paid. That gap is known and bounded.
+
+The buyer's chosen rate rides through Stripe as `metadata.printfulRateId` and is read back in
+the webhook, so the Printful order uses the service that was actually paid for.
+
+Nothing in the request body decides what anyone is charged. The cart sends variant ids,
+quantities and a country; prices and postage are fetched again from Printful inside the
+checkout endpoint.
+
+### Environment variables
 
 | Variable | Where it comes from |
 |---|---|
 | `PRINTFUL_API_TOKEN` | Printful → Stores → your API-type store → Settings → API |
 | `PRINTFUL_STORE_ID` | Only needed for an account-level token from developers.printful.com that can see more than one store |
 | `STRIPE_SECRET_KEY` | Stripe dashboard → Developers → API keys |
-| `STRIPE_WEBHOOK_SECRET` | Created after deploy — see below |
+| `STRIPE_WEBHOOK_SECRET` | Created with the webhook endpoint — see below |
 
 **Wiring up the Stripe webhook** (needs a live URL, so do this after the first deploy):
 
 1. Stripe dashboard → Developers → Webhooks → Add endpoint.
-2. Endpoint URL: `https://merlowunfiltered.vercel.app/api/webhook`.
+2. Endpoint URL: `https://merlow.space/api/webhook`.
 3. Event to send: `checkout.session.completed`.
-4. Copy the signing secret it gives you into the `STRIPE_WEBHOOK_SECRET` env var in Vercel,
-   then redeploy.
+4. Copy the signing secret it gives you into `STRIPE_WEBHOOK_SECRET` in Vercel, then
+   redeploy. A webhook secret only takes effect on a new deployment.
 
 **Orders start as drafts.** `api/webhook.js` has `AUTO_CONFIRM_ORDERS = false` at the top —
 paid orders land in Printful unconfirmed, so nothing gets produced or charged to your
-Printful account automatically. Confirm them by hand in the Printful dashboard until
-you've watched a few go through end to end, then flip that flag to `true` to auto-confirm
-on payment.
+Printful account automatically. Confirm them by hand in the Printful dashboard until you have
+watched a few go through end to end, then flip that flag to `true`.
+
+A Stripe webhook that does not get a 2xx is retried, and it will retry one whose order *was*
+placed if the reply was lost coming back. The order carries the Stripe session id as its
+`external_id`; Printful refuses a second order with the same one, and the handler treats that
+refusal as "already done" rather than an error. So a retry cannot produce a second jacket.
+A session that completes without the money having arrived — a delayed payment method — is
+acknowledged and not ordered.
+
+### Testing checkout end to end
+
+Point the site at Stripe's test keys, run a purchase with a test card, and watch the order
+arrive in Printful as a draft. Nothing real moves.
+
+1. Set `STRIPE_SECRET_KEY` to the `sk_test_…` key from the Stripe dashboard.
+2. Add a webhook endpoint in **test mode** for `https://merlow.space/api/webhook`, event
+   `checkout.session.completed`, and put its `whsec_…` into `STRIPE_WEBHOOK_SECRET`.
+3. Redeploy, then buy something with card `4242 4242 4242 4242`, any future expiry, any CVC.
+4. Check Stripe → Developers → Webhooks shows a 200, and Printful → Orders shows a draft
+   with the right variant, quantity, address and shipping method.
+5. Swap both variables for their live values and redeploy.
+
+## Tests
+
+```
+npm test                              # keying, and product-name cleanup
+node test/deploy-check.mjs <url>      # against a real deployment
+```
+
+`test/mockup.test.js` and `test/printful.test.js` use Node's own test runner — no framework.
+`test/deploy-check.mjs` runs against a preview or production URL and asserts the two things
+nothing else can: every mockup the shop renders comes back with no backdrop and with the
+product still in it, and postage to every country on offer is a real number from Printful. It
+keys three known flattened mockups on purpose, with a control that first checks those
+originals really are on white — otherwise the assertion would be passing on images that never
+needed keying.
+
+The Stripe half is deliberately not in there. Creating a Checkout Session is a write to a live
+payments account, so it is done by hand from the runbook above.
+
+**npm cannot install into this folder.** It lives on a Google Drive mount and `npm i` fails
+with `EBADF`. Vercel installs fine on its own machines, so this only affects running the tests
+locally: install `sharp` into a scratch folder and point `NODE_PATH` at it.
+
+```
+NODE_PATH=/c/scratch/node_modules node --test test/mockup.test.js test/printful.test.js
+```
+
+## Still to wire up
+
+- **Mailing list** — the footer form is a visual placeholder. It intercepts submit and
+  says so on screen; nothing is sent anywhere. Point it at Mailchimp / Buttondown /
+  ConvertKit when you have an account.
+- **Tax** — nothing charges VAT or sales tax. Stripe Tax would do it (`automatic_tax` on the
+  session, plus `tax_code` on the shipping rate), and it is a paid add-on, so it is a decision
+  rather than an oversight.
 
 ## Previewing locally
 
-The static page opens fine on its own (`index.html` directly, or the Python server
-below), but the Shop section needs the `/api/*` serverless functions, which only run
-under Vercel — plain `http.server` will 404 on `/api/products`. Use `vercel dev` from
-this folder to preview the full site including checkout, or deploy to a Vercel preview
-branch.
+The static page opens on its own, but the shop needs the `/api/*` functions, which only run
+under Vercel — a plain file server 404s on `/api/products`. Deploy a preview instead; that is
+what the deploy check is for.
+
+```bash
+npx vercel deploy --archive=tgz
+```
+
+```bash
+node test/deploy-check.mjs https://the-preview-url.vercel.app
+```
+
+For the static pages alone:
 
 ```bash
 python -m http.server 5599 --directory Website
 ```
-
-Then visit `http://localhost:5599`.

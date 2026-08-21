@@ -1127,6 +1127,32 @@ a { color: inherit; }
 .shop__item:hover .shop__cta,
 .shop__link:focus-visible .shop__cta { color: var(--bone); }
 
+/* How many colours a piece comes in, said with the colours. The card does not
+   let you pick one — that is the product page's job — so these are a count you
+   can read at a glance, not a control. */
+.shop__colors {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 clamp(1rem, 2vw, 1.5rem) 0.85rem;
+}
+.shop__color {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: var(--swatch, #555);
+  /* A near-black swatch on a near-black card needs an edge to exist at all. */
+  box-shadow: inset 0 0 0 1px rgba(237, 234, 228, 0.35);
+}
+.shop__colors-count {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ash);
+  margin-left: 0.15rem;
+}
+
 .shop__more { margin: clamp(2.5rem, 6vw, 4rem) 0 0; }
 
 /* ─────────────── shop / product pages ─────────────── */
@@ -1445,7 +1471,8 @@ a { color: inherit; }
 }
 .cart__item {
   display: grid;
-  grid-template-columns: 1fr auto auto auto;
+  /* thumbnail | name+controls | price | remove */
+  grid-template-columns: 3.5rem 1fr auto auto;
   align-items: center;
   gap: 0.5rem 0.75rem;
   padding-bottom: 0.85rem;
@@ -1453,7 +1480,25 @@ a { color: inherit; }
   font-family: var(--font-mono);
   font-size: 0.75rem;
 }
-.cart__item-name { grid-column: 1 / -1; text-transform: uppercase; letter-spacing: 0.04em; }
+.cart__item-media {
+  grid-row: 1 / span 2;
+  display: block;
+  width: 3.5rem;
+  aspect-ratio: 1 / 1;
+  background: var(--ink);
+  border: 1px solid var(--line-soft);
+}
+.cart__item-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.cart__item-name {
+  grid-column: 2 / -1;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
 .cart__item-qty { display: inline-flex; align-items: center; gap: 0.4rem; }
 .cart__item-qty button {
   width: 1.6rem;
@@ -1476,13 +1521,58 @@ a { color: inherit; }
   padding-top: 1rem;
   margin-top: 1rem;
 }
-.cart__total {
+/* Postage is quoted from Printful for the country picked here, so the total
+   below is the total — see js/cart.js. */
+.cart__ship {
   display: flex;
+  align-items: center;
   justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+.cart__ship-label {
   font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ash);
+  white-space: nowrap;
+}
+.cart__ship-select {
+  flex: 1;
+  min-width: 0;
+  min-height: 38px;
+  background: var(--ink-3);
+  color: var(--bone);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0 0.6rem;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+}
+.cart__ship-select:disabled { opacity: 0.6; }
+
+.cart__totals {
+  margin: 0 0 0.85rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  margin-bottom: 0.85rem;
+  color: var(--ash);
+}
+.cart__totals > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.2rem 0;
+}
+.cart__totals dt, .cart__totals dd { margin: 0; }
+.cart__grand {
+  margin-top: 0.35rem;
+  padding-top: 0.5rem !important;
+  border-top: 1px solid var(--line-soft);
+  font-size: 0.875rem;
+  color: var(--bone);
 }
 .cart__checkout { width: 100%; }
 .cart__checkout:disabled { opacity: 0.5; cursor: not-allowed; }

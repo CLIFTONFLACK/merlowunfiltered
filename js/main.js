@@ -240,43 +240,20 @@ function initStoryVideos() {
 }
 
 /* ───────────────────────────────────────────────────────────
-   7. Shop — Printful catalog + cart
+   7. Shop — a preview of the Printful catalog
 
    Products load from /api/products (a serverless proxy in front of
-   Printful, keeping the API token server-side). The cart itself is
-   just localStorage; checkout hands the cart to /api/create-checkout-
-   session, which builds a Stripe Checkout Session and returns its
-   hosted URL — the browser is redirected there directly, so no
-   Stripe.js or publishable key is needed on this page at all.
+   Printful, keeping the API token server-side). The card itself lives
+   in js/cart.js, because /shop renders the same one and two copies is
+   how the two grids drift apart. Everything past the card — sizes,
+   colours, the cart, postage and the handoff to Stripe — belongs to
+   the product page and the cart, not here.
    ─────────────────────────────────────────────────────────── */
 
-const { money, escapeHtml, priceLabel, productHref } = window.Merlow;
+const { productCard } = window.Merlow;
 
 /* How many products the home page previews before sending you to /shop. */
 const HOME_PREVIEW = 3;
-
-/* The home cards are a window onto the shop, not the shop itself: picture,
-   name, price, and a way through. Sizes and colours are chosen on the product
-   page, where there is room to show what you are choosing between. */
-function renderProductCard(product) {
-  const variants = product.variants || [];
-  const image = product.thumbnail || (variants[0] && variants[0].image) || '';
-  const price = priceLabel(variants);
-
-  return `
-    <li class="shop__item reveal">
-      <a class="shop__link" href="${escapeHtml(productHref(product))}">
-        <span class="shop__media">
-          ${image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(product.name)}" width="800" height="800" loading="lazy" decoding="async">` : ''}
-        </span>
-        <span class="shop__meta">
-          <span class="shop__name">${escapeHtml(product.name)}</span>
-          ${price ? `<span class="shop__price">${price}</span>` : ''}
-        </span>
-        <span class="shop__cta">${variants.length ? 'View' : 'Currently unavailable'}</span>
-      </a>
-    </li>`;
-}
 
 async function loadShop() {
   const grid = document.getElementById('shopGrid');
@@ -293,7 +270,7 @@ async function loadShop() {
       return;
     }
 
-    grid.innerHTML = products.slice(0, HOME_PREVIEW).map(renderProductCard).join('');
+    grid.innerHTML = products.slice(0, HOME_PREVIEW).map(productCard).join('');
 
     // Only worth pointing at the full shop when there is more behind it.
     const more = document.getElementById('shopMore');

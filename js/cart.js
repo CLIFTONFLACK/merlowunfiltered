@@ -13,11 +13,18 @@
    /api/create-checkout-session re-prices every line against Printful before
    it builds the Stripe session, so a tampered localStorage cannot change what
    anyone is charged.
+
+   Postage works the same way. The country picked here is quoted against
+   Printful through /api/shipping-rates so the total on screen is the total,
+   but the quote shown is never the quote charged — the checkout endpoint asks
+   Printful again and builds the Stripe session from that.
    ─────────────────────────────────────────────────────────── */
 
 window.Merlow = (function () {
   const CART_KEY = 'merlow-cart-v2';
+  const COUNTRY_KEY = 'merlow-ship-country';
   const MAX_PER_LINE = 10;
+  const QUOTE_DEBOUNCE_MS = 350;
 
   /* ── helpers ─────────────────────────────────────────────── */
 
@@ -35,6 +42,16 @@ window.Merlow = (function () {
     }[c]));
   }
 
+  /* Every product mockup on the site goes through /api/mockup, which serves it
+     with the backdrop taken off. Printful cuts out most of them already but
+     not all, and a white box on this page is loud. Anything not from Printful
+     is left alone — the endpoint will not fetch it anyway. */
+  function mockup(src, width = 800) {
+    if (!src) return '';
+    if (!/^https:\/\/[^/]*\.printful\.com\//i.test(src)) return src;
+    return `/api/mockup?src=${encodeURIComponent(src)}&w=${width}`;
+  }
+
   /* Cheapest variant, marked "from" only where the variants actually differ —
      a one-variant cap should read as a flat price, not "from". */
   function priceLabel(variants) {
@@ -47,6 +64,51 @@ window.Merlow = (function () {
 
   function productHref(product) {
     return `/shop/${product.id}`;
+  }
+
+  /* The product's display name, with the "Official MERLOW" that sits on every
+     one of them taken off by the API. Falls back for anything older. */
+  function productTitle(product) {
+    return product.title || product.name || '';
+  }
+
+  /* Colour codes come from Printful and end up inside a style attribute. Only
+     a hex colour is ever let through; anything else is a swatch that would
+     have been wrong anyway, and this is not the place to find out that a
+     catalog field can carry a semicolon. */
+  function swatchColor(code) {
+    return /^#[0-9a-f]{3,8}$/i.test(String(code || '')) ? code : '#555';
+  }
+
+  /* One card, used by the home page's preview row and by /shop, because two
+     copies of it is how the two grids drift apart. Sizes and colours are
+     chosen on the product page, where there is room to show what is being
+     chosen between; the swatches here only say how many there are. */
+  function productCard(product) {
+    const variants = product.variants || [];
+    const title = productTitle(product);
+    const image = mockup(product.thumbnail || (variants[0] && variants[0].image) || '');
+    const price = priceLabel(variants);
+    const colors = (product.colors || []).filter((c) => c && c.name);
+
+    return `
+      <li class="shop__item reveal">
+        <a class="shop__link" href="${escapeHtml(productHref(product))}">
+          <span class="shop__media">
+            ${image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(title)}" width="800" height="800" loading="lazy" decoding="async">` : ''}
+          </span>
+          <span class="shop__meta">
+            <span class="shop__name">${escapeHtml(title)}</span>
+            ${price ? `<span class="shop__price">${price}</span>` : ''}
+          </span>
+          ${colors.length > 1 ? `
+            <span class="shop__colors">
+              ${colors.map((c) => `<span class="shop__color" style="--swatch: ${swatchColor(c.code)}"></span>`).join('')}
+              <span class="shop__colors-count">${colors.length} colours</span>
+            </span>` : ''}
+          <span class="shop__cta">${variants.length ? 'View' : 'Currently unavailable'}</span>
+        </a>
+      </li>`;
   }
 
   /* ── storage ─────────────────────────────────────────────── */
@@ -84,15 +146,13 @@ window.Merlow = (function () {
     } else {
       cart.push({ ...line, quantity: Math.min(MAX_PER_LINE, quantity) });
     }
-    save();
-    render();
+    changed();
     open();
   }
 
   function remove(variantId) {
     cart = cart.filter((i) => i.variantId !== variantId);
-    save();
-    render();
+    changed();
   }
 
   function setQuantity(variantId, quantity) {
@@ -100,7 +160,116 @@ window.Merlow = (function () {
     const item = cart.find((i) => i.variantId === variantId);
     if (!item) return;
     item.quantity = Math.min(MAX_PER_LINE, quantity);
+    changed();
+  }
+
+  /* The one way the cart changes. Persisting, re-quoting postage for the new
+     contents and redrawing are the same event, and splitting them is how a
+     total ends up describing a cart that is no longer there. */
+  function changed() {
     save();
+    quoteSoon();
+  }
+
+  /* ── shipping ────────────────────────────────────────────── */
+
+  /* status: 'idle' | 'quoting' | 'quoted' | 'unavailable' */
+  const shipping = { country: null, status: 'idle', rate: null, currency: 'USD' };
+  let quoteTimer = null;
+  let quoteToken = 0;
+
+  function savedCountry() {
+    try {
+      const saved = localStorage.getItem(COUNTRY_KEY);
+      if (saved) return saved;
+    } catch { /* private mode */ }
+
+    // A better first guess than always GB, and it is only a default: the
+    // picker is right there, and Stripe collects the real address anyway.
+    const region = (navigator.language || '').split('-')[1];
+    return region ? region.toUpperCase() : null;
+  }
+
+  async function loadCountries() {
+    const select = document.getElementById('cartCountry');
+    if (!select) return;
+
+    try {
+      const res = await fetch('/api/shipping-rates');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const list = Array.isArray(data.countries) ? data.countries : [];
+      if (!list.length) throw new Error('no countries');
+
+      select.innerHTML = list
+        .map((c) => `<option value="${escapeHtml(c.code)}">${escapeHtml(c.name)}</option>`)
+        .join('');
+
+      const wanted = savedCountry();
+      const supported = list.some((c) => c.code === wanted);
+      shipping.country = supported ? wanted : data.default || list[0].code;
+      select.value = shipping.country;
+      select.disabled = false;
+
+      quoteSoon();
+    } catch (err) {
+      // No picker means no quote, and the total says so rather than lying.
+      select.closest('.cart__ship')?.setAttribute('hidden', '');
+      shipping.status = 'unavailable';
+      render();
+    }
+  }
+
+  function setCountry(code) {
+    shipping.country = code;
+    try {
+      localStorage.setItem(COUNTRY_KEY, code);
+    } catch { /* private mode */ }
+    quoteSoon();
+  }
+
+  /* Debounced, because holding the + button is a burst of cart changes and
+     each one would otherwise be a round trip to Printful. */
+  function quoteSoon() {
+    clearTimeout(quoteTimer);
+    if (!cart.length || !shipping.country) {
+      shipping.status = 'idle';
+      shipping.rate = null;
+    } else {
+      shipping.status = 'quoting';
+      quoteTimer = setTimeout(quoteShipping, QUOTE_DEBOUNCE_MS);
+    }
+    render();
+  }
+
+  async function quoteShipping() {
+    const token = ++quoteToken;
+    try {
+      const res = await fetch('/api/shipping-rates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          country: shipping.country,
+          items: cart.map((i) => ({ variantId: i.variantId, quantity: i.quantity })),
+        }),
+      });
+      const data = await res.json();
+      // A slow answer to an old cart must not overwrite a fast answer to the
+      // current one.
+      if (token !== quoteToken) return;
+      if (!res.ok || !Array.isArray(data.rates) || !data.rates.length) throw new Error('no rates');
+
+      const cheapest = data.rates.reduce((a, b) => (b.rate < a.rate ? b : a));
+      shipping.rate = cheapest;
+      shipping.currency = cheapest.currency || shipping.currency;
+      shipping.status = 'quoted';
+    } catch (err) {
+      if (token !== quoteToken) return;
+      // Checkout is deliberately still allowed: the server quotes again, and a
+      // Printful hiccup here should not stop someone buying a jacket.
+      shipping.rate = null;
+      shipping.status = 'unavailable';
+    }
     render();
   }
 
@@ -119,7 +288,17 @@ window.Merlow = (function () {
         </div>
         <ul class="cart__items" id="cartItems"></ul>
         <div class="cart__foot">
-          <div class="cart__total"><span>Total</span><span id="cartTotal">&mdash;</span></div>
+          <div class="cart__ship">
+            <label class="cart__ship-label" for="cartCountry">Ship to</label>
+            <select class="cart__ship-select" id="cartCountry" disabled>
+              <option>Loading&hellip;</option>
+            </select>
+          </div>
+          <dl class="cart__totals">
+            <div><dt>Subtotal</dt><dd id="cartSubtotal">&mdash;</dd></div>
+            <div><dt>Shipping</dt><dd id="cartShipping">&mdash;</dd></div>
+            <div class="cart__grand"><dt>Total</dt><dd id="cartTotal">&mdash;</dd></div>
+          </dl>
           <button class="btn btn--primary cart__checkout" id="cartCheckout" type="button" disabled>Checkout</button>
           <p class="cart__note" id="cartNote"></p>
         </div>
@@ -141,7 +320,6 @@ window.Merlow = (function () {
     if (!itemsEl) return;
 
     const countEl = document.getElementById('cartCount');
-    const totalEl = document.getElementById('cartTotal');
     const toggleEl = document.getElementById('cartToggle');
     const checkoutBtn = document.getElementById('cartCheckout');
 
@@ -151,21 +329,23 @@ window.Merlow = (function () {
 
     if (!cart.length) {
       itemsEl.innerHTML = '<li class="cart__empty">Your cart is empty.</li>';
-      if (totalEl) totalEl.textContent = '—';
+      setTotals(null);
       if (checkoutBtn) checkoutBtn.disabled = true;
       return;
     }
 
-    let total = 0;
+    let subtotal = 0;
     let currency = 'USD';
     itemsEl.innerHTML = cart.map((item) => {
-      total += item.price * item.quantity;
+      subtotal += item.price * item.quantity;
       currency = item.currency || currency;
-      const label = item.variantName
-        ? `${item.name} — ${item.variantName}`
-        : item.name;
+      const label = item.variantName ? `${item.name} — ${item.variantName}` : item.name;
+      const image = mockup(item.image, 160);
       return `
         <li class="cart__item" data-variant="${item.variantId}">
+          <span class="cart__item-media">
+            ${image ? `<img src="${escapeHtml(image)}" alt="" width="80" height="80" loading="lazy" decoding="async">` : ''}
+          </span>
           <span class="cart__item-name">${escapeHtml(label)}</span>
           <span class="cart__item-qty">
             <button type="button" data-qty="-1" aria-label="Decrease quantity">&minus;</button>
@@ -190,8 +370,36 @@ window.Merlow = (function () {
       });
     });
 
-    if (totalEl) totalEl.textContent = money(total, currency);
-    if (checkoutBtn) checkoutBtn.disabled = false;
+    setTotals({ subtotal, currency });
+    if (checkoutBtn) checkoutBtn.disabled = shipping.status === 'quoting';
+  }
+
+  function setTotals(totals) {
+    const subtotalEl = document.getElementById('cartSubtotal');
+    const shippingEl = document.getElementById('cartShipping');
+    const totalEl = document.getElementById('cartTotal');
+    if (!totalEl) return;
+
+    if (!totals) {
+      if (subtotalEl) subtotalEl.textContent = '—';
+      if (shippingEl) shippingEl.textContent = '—';
+      totalEl.textContent = '—';
+      return;
+    }
+
+    const { subtotal, currency } = totals;
+    if (subtotalEl) subtotalEl.textContent = money(subtotal, currency);
+
+    if (shipping.status === 'quoted' && shipping.rate) {
+      if (shippingEl) shippingEl.textContent = money(shipping.rate.rate, shipping.rate.currency);
+      totalEl.textContent = money(subtotal + shipping.rate.rate, currency);
+    } else {
+      if (shippingEl) {
+        shippingEl.textContent =
+          shipping.status === 'quoting' ? 'Working it out…' : 'At checkout';
+      }
+      totalEl.textContent = money(subtotal, currency);
+    }
   }
 
   function open() {
@@ -234,12 +442,15 @@ window.Merlow = (function () {
     const checkout = document.getElementById('cartCheckout');
     const note = document.getElementById('cartNote');
     const drawer = document.getElementById('cartDrawer');
+    const country = document.getElementById('cartCountry');
 
     if (toggle) toggle.addEventListener('click', open);
     if (closeBtn) closeBtn.addEventListener('click', close);
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && drawer && !drawer.hidden) close();
     });
+
+    if (country) country.addEventListener('change', () => setCountry(country.value));
 
     if (checkout) {
       checkout.addEventListener('click', async () => {
@@ -252,6 +463,7 @@ window.Merlow = (function () {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+              country: shipping.country,
               items: cart.map((i) => ({ variantId: i.variantId, quantity: i.quantity })),
             }),
           });
@@ -259,7 +471,11 @@ window.Merlow = (function () {
           if (!res.ok || !data.url) throw new Error(data.error || 'Checkout failed');
           window.location.href = data.url;
         } catch (err) {
-          if (note) note.textContent = 'Couldn’t start checkout — try again in a moment.';
+          /* Show the server's own words. "That's no longer available" and
+             "we don't ship there yet" are things the reader can act on, and a
+             blanket apology leaves them stuck. Each message is written to
+             stand on its own, so nothing is appended to it here. */
+          if (note) note.textContent = `${err.message || 'Couldn’t start checkout — try again in a moment'}.`;
           checkout.disabled = false;
           checkout.textContent = 'Checkout';
         }
@@ -268,7 +484,25 @@ window.Merlow = (function () {
 
     handleOrderReturn();
     render();
+    loadCountries();
   }
 
-  return { init, add, remove, setQuantity, open, close, render, count, money, escapeHtml, priceLabel, productHref };
+  return {
+    init,
+    add,
+    remove,
+    setQuantity,
+    open,
+    close,
+    render,
+    count,
+    money,
+    escapeHtml,
+    mockup,
+    priceLabel,
+    productHref,
+    productTitle,
+    productCard,
+    swatchColor,
+  };
 })();

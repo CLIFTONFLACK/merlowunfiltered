@@ -3,7 +3,11 @@
   "private": true,
   "version": "1.0.0",
   "description": "MERLOW: UNFILTERED — static site + Printful/Stripe serverless API",
+  "scripts": {
+    "test": "node --test test/mockup.test.js test/printful.test.js"
+  },
   "dependencies": {
+    "sharp": "^0.33.5",
     "stripe": "^16.0.0"
   }
 }

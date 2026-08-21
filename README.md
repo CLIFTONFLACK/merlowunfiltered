@@ -198,13 +198,29 @@ checkout endpoint.
 | `STRIPE_SECRET_KEY` | Stripe dashboard → Developers → API keys |
 | `STRIPE_WEBHOOK_SECRET` | Created with the webhook endpoint — see below |
 
-**Wiring up the Stripe webhook** (needs a live URL, so do this after the first deploy):
+**The Stripe webhook is wired up** — endpoint `we_1U70RiBsqra5qpROre8jJ97d`, live mode,
+`https://merlow.space/api/webhook`, subscribed to `checkout.session.completed`. To rebuild it
+after rolling a secret or moving the site:
 
 1. Stripe dashboard → Developers → Webhooks → Add endpoint.
 2. Endpoint URL: `https://merlow.space/api/webhook`.
 3. Event to send: `checkout.session.completed`.
 4. Copy the signing secret it gives you into `STRIPE_WEBHOOK_SECRET` in Vercel, then
-   redeploy. A webhook secret only takes effect on a new deployment.
+   redeploy. **A webhook secret only takes effect on a new deployment** — setting the variable
+   is not enough, and a stale deployment fails verification in a way that looks exactly like a
+   wrong secret.
+
+To check the secret a deployment is actually holding, without making a payment: hand-sign an
+event and post it. Stripe's header is `t=<unix seconds>,v1=<HMAC-SHA256 of "<t>.<body>" with
+the secret>`. Send a `checkout.session.completed` whose `payment_status` is *not* `paid` and
+the handler will verify it, decline to order, and answer `200 {"received":true,"ordered":false}`
+— proof the secret matches, with nothing sent to Printful. Repeat with a junk secret and expect
+a 400, or the 200 means nothing.
+
+**MERLOW shares a Stripe account with GetForged**, whose endpoint subscribes to
+`checkout.session.completed` at account level — so it receives MERLOW's events too, and
+MERLOW's checkout page carries GetBrian's branding. See the reminder at the end of
+`../tasks/shop-checkout-2026-08-21.md`.
 
 **Orders start as drafts.** `api/webhook.js` has `AUTO_CONFIRM_ORDERS = false` at the top —
 paid orders land in Printful unconfirmed, so nothing gets produced or charged to your

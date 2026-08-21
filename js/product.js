@@ -220,7 +220,7 @@
         window.Merlow.add({
           variantId: chosen.id,
           name: productTitle(state.product),
-          variantName: [chosen.color, chosen.size].filter(Boolean).join(' / ') || chosen.name,
+          variantName: chosen.label || [chosen.color, chosen.size].filter(Boolean).join(' / '),
           price: chosen.price,
           currency: chosen.currency,
           image: chosen.image,

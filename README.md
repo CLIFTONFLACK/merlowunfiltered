@@ -95,10 +95,6 @@ Everything in `media/` is a resized copy — the originals are untouched in
 | `plate.jpg` | faint texture behind the chorus | `Design Mockups/UnUnUn_good.png` |
 | `favicon.png` (256), `favicon-180.png`, `favicon-32.png` | tab icon and apple-touch icon: the M mark, studio background keyed out to transparency, cropped to the mark, with a bone rim so the near-black half still reads on a dark browser tab | `M Logo.png` |
 
-`merch-lion.jpg` and `merch-britain.jpg` are still in `media/` and nothing points at
-them any more — the shop has come from Printful since the two static cards were
-replaced.
-
 The hero video must stay **silent** — browsers refuse to autoplay a clip with an audio
 track, and the page would fall back to the poster image.
 

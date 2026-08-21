@@ -67,7 +67,9 @@ module.exports = async (req, res) => {
           currency: variant.currency.toLowerCase(),
           unit_amount: Math.round(variant.price * 100),
           product_data: {
-            name: `${variant.productName} — ${variant.name}`,
+            name: variant.label
+              ? `${variant.productName} — ${variant.label}`
+              : variant.productName,
             images: variant.image ? [variant.image] : undefined,
             // Read back out of session.line_items in the webhook so the
             // Printful order always matches what was actually paid for —

@@ -8,6 +8,7 @@
 
 const Stripe = require('stripe');
 const { printfulFetch } = require('../lib/printful');
+const { owns, tagRejects } = require('../lib/ownership');
 
 /* Built on first use, for the same reason as in create-checkout-session.js. */
 let stripeClient = null;
@@ -50,6 +51,14 @@ async function handler(req, res) {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
 
+    /* GetForged shares this Stripe account, so its completed checkouts are
+       delivered here too. Answer 200 and drop them: anything else is a 500 on
+       every one of their sales, retried until Stripe disables the endpoint. */
+    if (tagRejects(session)) {
+      console.log(`session ${session.id} belongs to ${session.metadata.app}; not ours`);
+      return res.status(200).json({ received: true, ordered: false });
+    }
+
     /* A session can complete without the money having arrived — a delayed
        payment method is authorised now and settles later. Printful would be
        told to make the garment either way. */
@@ -78,6 +87,15 @@ async function fulfillOrder(session) {
     limit: 100,
   });
 
+  /* Second gate, now that the lines are in hand. It catches an untagged
+     session from the other shop — one created before either side tagged
+     anything — which the cheap check above cannot tell from one of ours. */
+  const { ours, why } = owns(session, lineItems.data);
+  if (!ours) {
+    console.log(`session ${session.id} is not ours (${why}); ignoring`);
+    return false;
+  }
+
   const items = lineItems.data
     .map((li) => ({
       sync_variant_id: Number(li.price?.product?.metadata?.variantId),
@@ -85,8 +103,10 @@ async function fulfillOrder(session) {
     }))
     .filter((i) => Number.isFinite(i.sync_variant_id) && i.sync_variant_id > 0);
 
+  /* Ours, and yet nothing to order: a tagged MERLOW session whose lines lost
+     their variant ids is a real fault and must be retried, not swallowed. */
   if (!items.length) {
-    throw new Error(`session ${session.id} has no line items carrying a variantId`);
+    throw new Error(`session ${session.id} is tagged for this shop but carries no variantId`);
   }
 
   const shipping = session.shipping_details || session.collected_information?.shipping_details;

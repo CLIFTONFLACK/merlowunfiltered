@@ -17,6 +17,7 @@ const {
   toStripeShippingOptions,
   DEFAULT_COUNTRY,
 } = require('../lib/shipping');
+const { sessionMetadata } = require('../lib/ownership');
 
 /* Built on first use rather than at module load, so a missing key is a clear
    answer from the handler below instead of a cold-start crash. */
@@ -88,6 +89,14 @@ module.exports = async (req, res) => {
     const session = await stripe().checkout.sessions.create({
       mode: 'payment',
       line_items: lineItems,
+      /* This account also serves GetForged, and a Stripe webhook subscribes to
+         an event type for the whole account rather than to one app. The tag is
+         what lets each side's handler recognise its own traffic — see
+         lib/ownership.js. Repeated onto the PaymentIntent so the charge itself
+         carries it too, which is what makes a Stripe export or a Sigma query
+         able to tell the two businesses apart after the fact. */
+      metadata: sessionMetadata(),
+      payment_intent_data: { metadata: sessionMetadata() },
       // Locked to the one country the postage was quoted for. Checkout will
       // not let the buyer pick another, so the rate on the session is always
       // the rate for where the parcel is going.

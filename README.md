@@ -217,10 +217,44 @@ the handler will verify it, decline to order, and answer `200 {"received":true,"
 — proof the secret matches, with nothing sent to Printful. Repeat with a junk secret and expect
 a 400, or the 200 means nothing.
 
-**MERLOW shares a Stripe account with GetForged**, whose endpoint subscribes to
-`checkout.session.completed` at account level — so it receives MERLOW's events too, and
-MERLOW's checkout page carries GetBrian's branding. See the reminder at the end of
-`../tasks/shop-checkout-2026-08-21.md`.
+### MERLOW shares a Stripe account with GetForged
+
+A Stripe webhook endpoint subscribes to an *event type* for the whole account. It cannot be
+scoped to one product, one app or one domain. So MERLOW's endpoint is delivered GetForged's
+completed checkouts and GetForged's endpoint is delivered MERLOW's, and neither can be
+configured out of it.
+
+Every session this shop creates is therefore tagged `metadata.app = "merlow"`, repeated onto
+the PaymentIntent so the charge is attributable in an export or a Sigma query. `api/webhook.js`
+drops anything tagged for another app before it spends an API call on it — see
+`lib/ownership.js`.
+
+Untagged sessions need care in both directions, and get a structural test instead: a session
+whose line items carry Printful sync variant ids is ours, and one whose don't isn't. That
+matters because an order taken before tagging shipped has no tag, and dropping it would mean a
+paid customer who never receives anything — while an untagged GetForged sale must still never
+be ordered from Printful.
+
+**GetForged's side is not done, and is not in this repo.** Until it filters too, it is
+receiving MERLOW's completed checkouts. It needs the mirror image:
+
+```js
+// when it creates a session
+metadata: { app: 'getforged' },
+payment_intent_data: { metadata: { app: 'getforged' } },
+
+// first thing inside checkout.session.completed
+const tag = session.metadata?.app;
+if (tag && tag !== 'getforged') return res.status(200).json({ received: true });
+```
+
+Answering **200** matters. A non-2xx tells Stripe to retry, so erroring on the other shop's
+traffic means retrying every one of their sales until Stripe disables the endpoint for failing
+too often — at which point your own orders stop arriving as well.
+
+Branding is still shared: MERLOW's checkout page carries GetBrian's display name and logo, and
+the card statement will too. That needs a separate Stripe account or a Connect connected
+account — see the end of `../tasks/shop-checkout-2026-08-21.md`.
 
 **Orders start as drafts.** `api/webhook.js` has `AUTO_CONFIRM_ORDERS = false` at the top —
 paid orders land in Printful unconfirmed, so nothing gets produced or charged to your

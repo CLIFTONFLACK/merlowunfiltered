@@ -17,7 +17,7 @@ const {
   toStripeShippingOptions,
   DEFAULT_COUNTRY,
 } = require('../lib/shipping');
-const { sessionMetadata } = require('../lib/ownership');
+const { sessionMetadata, STATEMENT_DESCRIPTOR_SUFFIX } = require('../lib/ownership');
 
 /* Built on first use rather than at module load, so a missing key is a clear
    answer from the handler below instead of a cold-start crash. */
@@ -96,7 +96,12 @@ module.exports = async (req, res) => {
          carries it too, which is what makes a Stripe export or a Sigma query
          able to tell the two businesses apart after the fact. */
       metadata: sessionMetadata(),
-      payment_intent_data: { metadata: sessionMetadata() },
+      payment_intent_data: {
+        metadata: sessionMetadata(),
+        /* Cards use the suffix. It is appended to the account's descriptor, so
+           the line on the bill names MERLOW and not only GetBrian. */
+        statement_descriptor_suffix: STATEMENT_DESCRIPTOR_SUFFIX,
+      },
       // Locked to the one country the postage was quoted for. Checkout will
       // not let the buyer pick another, so the rate on the session is always
       // the rate for where the parcel is going.

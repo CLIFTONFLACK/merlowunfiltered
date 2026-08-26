@@ -13,7 +13,14 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { APP, sessionMetadata, owns, tagRejects } = require('../lib/ownership');
+const {
+  APP,
+  STATEMENT_DESCRIPTOR_SUFFIX,
+  SUFFIX_BUDGET,
+  sessionMetadata,
+  owns,
+  tagRejects,
+} = require('../lib/ownership');
 
 const tagged = (app) => ({ id: 'cs_1', metadata: app ? { app } : {} });
 const merlowLines = [{ price: { product: { metadata: { variantId: '5451559113' } } } }];
@@ -63,4 +70,37 @@ test('a malformed session does not throw its way into a retry loop', () => {
 test('a variantId of 0 or nonsense does not count as one of ours', () => {
   assert.equal(owns(tagged(null), [{ price: { product: { metadata: { variantId: '0' } } } }]).ours, false);
   assert.equal(owns(tagged(null), [{ price: { product: { metadata: { variantId: 'abc' } } } }]).ours, false);
+});
+
+/* ── the card statement ──────────────────────────────────────
+   The suffix shares a 22-character budget with a prefix set on the Stripe
+   account, which the code cannot read. Going over does not fail the payment —
+   Stripe truncates — so the only place a mistake would show up is a real
+   customer's bank statement, weeks later, on a line they already half
+   recognise. Worth a test that a future "MERLOW UNFILTERED OFFICIAL STORE"
+   cannot get past. */
+
+test('the statement suffix leaves room for the account prefix', () => {
+  assert.ok(
+    STATEMENT_DESCRIPTOR_SUFFIX.length <= SUFFIX_BUDGET,
+    `"${STATEMENT_DESCRIPTOR_SUFFIX}" is ${STATEMENT_DESCRIPTOR_SUFFIX.length} chars; ` +
+      `the budget is ${SUFFIX_BUDGET}, so the prefix keeps at least ${22 - SUFFIX_BUDGET} of Stripe's 22`
+  );
+  assert.ok(SUFFIX_BUDGET < 22, 'the budget must actually reserve something for the prefix');
+});
+
+test('the statement suffix uses only characters Stripe accepts', () => {
+  // Letters, digits and spaces. Stripe rejects < > \ ' " * outright, and a
+  // descriptor with no letter at all.
+  assert.match(STATEMENT_DESCRIPTOR_SUFFIX, /^[A-Za-z0-9 ]+$/);
+  assert.match(STATEMENT_DESCRIPTOR_SUFFIX, /[A-Za-z]/, 'must contain at least one letter');
+  assert.doesNotMatch(STATEMENT_DESCRIPTOR_SUFFIX, /[<>\\'"*]/);
+  assert.equal(STATEMENT_DESCRIPTOR_SUFFIX.trim(), STATEMENT_DESCRIPTOR_SUFFIX, 'no stray padding');
+});
+
+test('the statement suffix says which shop, not which company', () => {
+  // The account is GetBrian's. The whole point of the suffix is that the line
+  // does not say only that.
+  assert.doesNotMatch(STATEMENT_DESCRIPTOR_SUFFIX, /getbrian/i);
+  assert.match(STATEMENT_DESCRIPTOR_SUFFIX, /merlow/i);
 });

@@ -1665,6 +1665,57 @@ a { color: inherit; }
 .social a:hover { background: var(--red); border-color: var(--red); color: #fff; }
 .social svg { width: 19px; height: 19px; fill: currentColor; }
 
+/* The <symbol> sprite the four marks are defined in. Out of flow and zero
+   sized rather than display:none, which stops <use> resolving in some
+   engines. */
+.sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+/* ─────────────── social row, top of the hero ───────────────
+   Not a header. The home page deliberately has none — it opens on the video
+   and is navigated by scrolling — so this sits INSIDE the hero and scrolls
+   away with it rather than following you down the page. The footer keeps the
+   same four links for when you have reached the bottom.
+
+   It reuses .social wholesale: same 48px square, same hairline border, same
+   red on hover. A second visual language for the same four links is how a
+   design system starts to fray, and 48px already clears the 44px a thumb
+   needs. Only the ground changes, and only because it has to. */
+.hero__social {
+  position: absolute;
+  top: 1.25rem;
+  right: var(--gut);
+  /* One above .hero__content, not level with it. Both would otherwise sit at
+     --z-hero-ui, the content comes later in the document, and its top padding
+     — transparent, and 60px tall — would paint over the bottom 8px of every
+     button. Which is invisible, and eats a click that lands there. */
+  z-index: calc(var(--z-hero-ui) + 1);
+}
+
+/* The scrim is at its thinnest across the top of the hero — it has to be, or
+   the video is a grey rectangle — and the footage behind these is bright in
+   places. So the squares carry their own ground instead of borrowing one,
+   and the border is lifted off --line, which is nearly invisible over moving
+   picture. */
+.hero__social a {
+  background: rgba(10, 11, 13, 0.55);
+  border-color: rgba(237, 234, 228, 0.3);
+  backdrop-filter: blur(6px);
+}
+.hero__social a:hover { background: var(--red); border-color: var(--red); }
+
+/* The wordmark is centred in the viewport, so on a narrow or a short screen
+   its top edge climbs towards the row. Centre the row above it and push the
+   hero content clear, rather than letting the two meet. 640px catches
+   phones upright; the height query catches one turned sideways, which is the
+   case that actually collides. */
+@media (max-width: 640px) {
+  .hero__social { right: auto; left: 50%; transform: translateX(-50%); top: 1rem; }
+  .hero__content { padding-top: 7.5rem; }
+}
+@media (max-height: 560px) {
+  .hero__content { padding-top: 7.5rem; }
+}
+
 .footer__bar {
   display: flex;
   flex-wrap: wrap;

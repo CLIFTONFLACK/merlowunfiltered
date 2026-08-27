@@ -3,3 +3,6 @@ Thumbs.db
 node_modules/
 .vercel
 .env*
+
+# Editor backups and hand-made copies. Never wanted in the repo.
+*.bak

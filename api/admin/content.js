@@ -127,11 +127,28 @@ module.exports = async (req, res) => {
     // freshness check and the commit. Small window, real one, and the answer is
     // the same as above: reload rather than force.
     const conflict = err.status === 409 || err.status === 422;
-    return send(res, conflict ? 409 : 502, {
-      ok: false,
-      message: conflict
-        ? 'The branch moved while this was saving. Reload the page and try again. Nothing was written.'
-        : `Could not commit: ${err.message}. Nothing was written.`,
-    });
+    if (conflict) {
+      return send(res, 409, {
+        ok: false,
+        message: 'The branch moved while this was saving. Reload the page and try again. Nothing was written.',
+      });
+    }
+
+    /* A 403 here is nearly always the token, and "Resource not accessible by
+       personal access token" does not say WHICH token or WHY — which matters
+       when there are several GitHub accounts about and the repository is public
+       enough for any of them to have read this far. So ask, and say. */
+    if (err.status === 403) {
+      const access = await github.writeAccess().catch(() => null);
+      const whose = access?.login ? ` The token belongs to ${access.login}.` : '';
+      return send(res, 502, {
+        ok: false,
+        message:
+          `Could not commit: ${err.message}.${whose} ` +
+          `It needs Contents: read and write on ${github.repo()}. Nothing was written.`,
+      });
+    }
+
+    return send(res, 502, { ok: false, message: `Could not commit: ${err.message}. Nothing was written.` });
   }
 };

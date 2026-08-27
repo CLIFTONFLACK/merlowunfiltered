@@ -48,6 +48,22 @@ async function problems(doc) {
     return out;
   }
 
+  /* Asked before anything else about GitHub, because this repository is public
+     and so every READ succeeds for any valid token — including one belonging to
+     a different account. Without this the first sign of trouble is a 403 landing
+     on somebody who has just typed a paragraph. */
+  const access = await github.writeAccess();
+  if (!access.canWrite) {
+    out.push(
+      `The GitHub token ${access.login ? `belongs to <code>${esc(access.login)}</code> and ` : ''}` +
+      `cannot write to <code>${esc(github.repo())}</code>, so no save will land. ` +
+      (access.error ? `GitHub said: ${esc(access.error)}. ` : '') +
+      'Check it is a token on the account that owns the repository, that the repository is in its list, ' +
+      'and that <b>Contents</b> is set to <b>Read and write</b> rather than Read-only. ' +
+      'Changing that permission takes effect at once — the token does not need reissuing.'
+    );
+  }
+
   try {
     const { stale, head, deployed } = await github.freshness();
     if (stale) {
@@ -113,6 +129,7 @@ module.exports = async (req, res) => {
   const [warnings, product] = await Promise.all([problems(doc), sampleProduct()]);
 
   const items = [
+    { name: 'The home page', detail: '/ — the hero, the chorus, the three story panels, the section headings and the footer', href: '/admin/edit?page=home' },
     { name: 'The shop', detail: '/shop — the heading, the lede, the navigation and the footer', href: '/admin/edit?page=shop' },
     {
       name: 'A product page',

@@ -287,7 +287,7 @@ arrive in Printful as a draft. Nothing real moves.
    with the right variant, quantity, address and shipping method.
 5. Swap both variables for their live values and redeploy.
 
-## Editing the shop's words — `/admin/edit`
+## Editing the site's words — `/admin/edit`
 
 Sign in at **merlow.space/admin**, open a page, and type on it. The page you type
 on is the real page: same file, same stylesheet, same scripts, real products from
@@ -301,13 +301,23 @@ later. That means every edit has a diff, an author and a revert, and it means
 
 ### What is editable, and where each string lives
 
+88 strings, in three files:
+
 | | |
 |---|---|
+| `index.html` | the hero, the chorus, the three story panels, the facts, every section heading and lede, the whole footer, and the page's title and share card |
 | `shop.html` | the shop's title, meta description, share card, nav, eyebrow, heading, lede, footer |
 | `product.html` | the product page's title, meta description, nav, crumb, footer |
 | `js/copy.js` | everything a script prints — the button, the option labels, the made-to-order note, the empty and error states, the spec headings |
 
-Product names, prices and photographs are Printful's and are not editable here.
+**Not** editable here, on purpose:
+
+- **Product names, prices and photographs.** Printful's, not ours.
+- **The tracklist.** Who is on the record and what genre they sang it in is a
+  fact about the album, and it lives in `js/main.js` next to the YouTube id it
+  has to change with — the same reason VANCE-HQ keeps its inventory in
+  `lib/estate.js` and only its *wording* in the editor. What the record is
+  called is copy; who is on it is not.
 
 Each string has exactly **one** home. There is no defaults table and no second
 copy anywhere, so nothing can drift out of step with the page. `lib/copy.js` is
@@ -352,6 +362,17 @@ Optional: `MERLOW_CONTENT_REPO` and `MERLOW_CONTENT_BRANCH` override the default
 
 Miss any of the three and the editor says so plainly rather than half-working —
 `/admin` checks all of them, by using them, before you have typed anything.
+
+**On the token, and a trap worth knowing about.** `merlowunfiltered` is a public
+repository, so *reads succeed for any valid token at all* — including one
+belonging to a different GitHub account. Everything therefore looks fine right up
+to the first write, which comes back `403 Resource not accessible by personal
+access token`. So `/admin` asks GitHub the only question that actually settles it
+— `permissions.push` on the repository — and names the account the token belongs
+to, because the usual cause is a token minted while signed in as the wrong one of
+several accounts. Changing **Contents** from Read-only to **Read and write** on
+an existing fine-grained token takes effect immediately; it does not need
+reissuing or re-adding to Vercel.
 
 ### The one way this can lose work
 

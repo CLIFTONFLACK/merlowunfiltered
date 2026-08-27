@@ -24,11 +24,16 @@ const { loadDocument } = require('../../lib/content.js');
 const { editStyles, editChrome, editScript } = require('../../lib/edit-mode.js');
 
 const PAGES = {
+  home: { file: 'index.html', label: 'the home page', prefix: 'home' },
   shop: { file: 'shop.html', label: 'the shop', prefix: 'shop' },
   product: { file: 'product.html', label: 'a product page', prefix: 'product' },
 };
 
-const other = (name) => (name === 'shop' ? 'product' : 'shop');
+/** The other pages, so the bar can get you to them without going via /admin. */
+const others = (name) =>
+  Object.keys(PAGES)
+    .filter((key) => key !== name)
+    .map((key) => ({ url: `/admin/edit?page=${key}`, label: `Edit ${PAGES[key].label}` }));
 
 module.exports = async (req, res) => {
   res.setHeader('Cache-Control', 'no-store, max-age=0, must-revalidate');
@@ -81,8 +86,7 @@ module.exports = async (req, res) => {
 
   const ctx = {
     pageLabel: target.label,
-    otherUrl: `/admin/edit?page=${other(name)}`,
-    otherLabel: `Edit ${PAGES[other(name)].label}`,
+    others: others(name),
     fields,
     values: doc.values,
   };

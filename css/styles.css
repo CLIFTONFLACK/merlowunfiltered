@@ -941,8 +941,8 @@ a { color: inherit; }
   white-space: nowrap;
 }
 
-/* Unreleased rows read a shade quieter than the eleven you can actually play,
-   without dropping out of the numbered sequence — the record is still fifteen. */
+/* Unreleased rows read a shade quieter than the ones you can actually play,
+   without dropping out of the numbered sequence — the record is thirteen. */
 .track--pending .track__artist { color: var(--ash); }
 
 .track__soon {

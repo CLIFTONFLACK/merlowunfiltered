@@ -3,8 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MERLOW: UNFILTERED</title>
-<meta name="description" content="Made to order and shipped worldwide.">
+<!-- data-edit marks a string that /admin/edit may change. See shop.html. -->
+<title data-edit="product.pageTitle">MERLOW: UNFILTERED</title>
+<meta name="description" content="Made to order and shipped worldwide." data-edit="product.metaDescription" data-edit-attr="content">
 <meta name="theme-color" content="#0A0B0D">
 <link rel="icon" href="/media/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="icon" href="/media/favicon.png" sizes="256x256" type="image/png">
@@ -23,32 +24,35 @@
       <img src="/media/merlow-wordmark.png" alt="MERLOW" width="640" height="150">
     </a>
     <nav class="pagehead__nav" aria-label="Shop">
-      <a href="/#story">The record</a>
-      <a href="/shop">Shop</a>
+      <a href="/#story" data-edit="product.navRecord">The record</a>
+      <a href="/shop" data-edit="product.navShop">Shop</a>
     </nav>
   </div>
 </header>
 
 <main>
   <div class="wrap">
-    <p class="crumb"><a href="/shop">&larr; All merchandise</a></p>
+    <!-- The arrow stays outside the mark: it is punctuation belonging to the
+         layout, not a word anybody wants to edit. -->
+    <p class="crumb"><a href="/shop">&larr; <span data-edit="product.crumb">All merchandise</span></a></p>
   </div>
 
   <article class="product" id="product" aria-live="polite">
     <div class="wrap">
-      <p class="shop__status">Loading&hellip;</p>
+      <p class="shop__status" data-edit="product.loading">Loading&hellip;</p>
     </div>
   </article>
 </main>
 
 <footer class="pagefoot">
   <div class="wrap pagefoot__inner">
-    <p>&copy; <span id="year"></span> MERLOW. Made to order by Printful.</p>
-    <a href="/">Back to the record</a>
+    <p>&copy; <span id="year"></span> <span data-edit="product.footCredit">MERLOW. Made to order by Printful.</span></p>
+    <a href="/" data-edit="product.footBack">Back to the record</a>
   </div>
 </footer>
 
 <script src="/js/reveal.js"></script>
+<script src="/js/copy.js"></script>
 <script src="/js/cart.js"></script>
 <script src="/js/product.js"></script>
 </body>

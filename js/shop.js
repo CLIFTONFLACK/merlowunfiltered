@@ -4,7 +4,12 @@
    the product page, where there is room to show what you are choosing. */
 
 (function () {
-  const { productCard } = window.Merlow;
+  const { productCard, copy, escapeHtml } = window.Merlow;
+
+  /* Both of these are states of the grid nobody sees when things are going
+     well, which is why /admin/edit lists them in a panel rather than expecting
+     you to break the shop to reword them. */
+  const status = (key) => `<li class="shop__status">${escapeHtml(copy(key))}</li>`;
 
   async function load() {
     const grid = document.getElementById('shopGrid');
@@ -18,9 +23,9 @@
 
       grid.innerHTML = products.length
         ? products.map(productCard).join('')
-        : '<li class="shop__status">The shop is being stocked — check back soon.</li>';
+        : status('shop.empty');
     } catch (err) {
-      grid.innerHTML = '<li class="shop__status">Couldn&rsquo;t load the shop right now — refresh to try again.</li>';
+      grid.innerHTML = status('shop.error');
     }
   }
 

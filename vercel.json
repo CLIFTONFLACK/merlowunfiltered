@@ -1,7 +1,15 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "functions": {
+    "api/admin/*.js": {
+      "includeFiles": "{shop.html,product.html,js/copy.js}"
+    }
+  },
   "rewrites": [
-    { "source": "/shop/:id", "destination": "/product" }
+    { "source": "/shop/:id", "destination": "/product" },
+    { "source": "/admin", "destination": "/api/admin/index" },
+    { "source": "/admin/signin", "destination": "/api/admin/signin" },
+    { "source": "/admin/edit", "destination": "/api/admin/edit" }
   ]
 }

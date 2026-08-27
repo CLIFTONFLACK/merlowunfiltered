@@ -1,5 +1,11 @@
 # MERLOW — website
 
+> **Paths updated 2026-08-27.** `Assets/Songs` was reorganised song-first
+> (`Songs/UNFILTERED/featuring <Artist>/{Audio,Lyrics,Artwork,Lyric_Video,Shorts}/`,
+> shared material under `UNFILTERED/_Shared/`). Asset paths below — including those in
+> completed entries — were rewritten to the new tree so they still resolve.
+> See `.claude/skills/unfiltered-lyric-video/references/asset_map.md`.
+
 Single static page for MERLOW and the debut collaborative album **UNFILTERED** —
 one song, fifteen collaborations, one shared voice.
 
@@ -85,13 +91,13 @@ Everything in `media/` is a resized copy — the originals are untouched in
 
 | File | What it is | Source |
 |---|---|---|
-| `hero-loop.mp4` | hero background loop, audio stripped | `Assets/Songs/Un-Filtered_Video/M logo animation 2.mp4` |
+| `hero-loop.mp4` | hero background loop, audio stripped | `Assets/Songs/M logo animation 2.mp4 (MISSING - see asset_map.md)` |
 | `hero-poster.jpg` | still shown before the video loads | frame from the same clip |
 | `cover.jpg` | album cover | `UNFILTERED-cover art.png` |
 | `merlow-wordmark.png` | the hero MERLOW mark — the cover's own wordmark, keyed to transparency, not type imitating it | `UNFILTERED-cover art.png` |
 | `chips.png` | chipped-paint mask for the three slogan lines, built from the chips inside the cover wordmark's strokes | `UNFILTERED-cover art.png` |
 | `chips-blue.png` | the same tile, alpha inverted and gamma-curved, painted deep navy — the worn-through undercoat on the H2/H3 headings | derived from `chips.png` |
-| `story-01..02.mp4` + `.jpg` | the two story clips and their poster frames — silent loops, `preload="none"`, started only when the band scrolls into view | `Clips/clips_Seedance/clip_01, 03` |
+| `story-01..02.mp4` + `.jpg` | the two story clips and their poster frames — silent loops, `preload="none"`, started only when the band scrolls into view | `_Shared/Clips/clips_Seedance/clip_01, 03` |
 | `plate.jpg` | faint texture behind the chorus | `Design Mockups/UnUnUn_good.png` |
 | `favicon.png` (256), `favicon-180.png`, `favicon-32.png` | tab icon and apple-touch icon: the M mark, studio background keyed out to transparency, cropped to the mark, with a bone rim so the near-black half still reads on a dark browser tab | `M Logo.png` |
 
@@ -281,12 +287,94 @@ arrive in Printful as a draft. Nothing real moves.
    with the right variant, quantity, address and shipping method.
 5. Swap both variables for their live values and redeploy.
 
+## Editing the shop's words — `/admin/edit`
+
+Sign in at **merlow.space/admin**, open a page, and type on it. The page you type
+on is the real page: same file, same stylesheet, same scripts, real products from
+Printful. Nothing is a preview of anything.
+
+**Saving is a commit.** There is no database. Every string lives in the file that
+serves it, so a save rewrites those files, commits them to `main` as one commit,
+and the push triggers the ordinary deploy — the change is live about a minute
+later. That means every edit has a diff, an author and a revert, and it means
+"undo" is `git revert`, not a button.
+
+### What is editable, and where each string lives
+
+| | |
+|---|---|
+| `shop.html` | the shop's title, meta description, share card, nav, eyebrow, heading, lede, footer |
+| `product.html` | the product page's title, meta description, nav, crumb, footer |
+| `js/copy.js` | everything a script prints — the button, the option labels, the made-to-order note, the empty and error states, the spec headings |
+
+Product names, prices and photographs are Printful's and are not editable here.
+
+Each string has exactly **one** home. There is no defaults table and no second
+copy anywhere, so nothing can drift out of step with the page. `lib/copy.js` is
+the schema: it says which file holds each string and how long it may be, and it
+holds no values.
+
+In the markup a string is marked with `data-edit="<key>"`:
+
+```html
+<h1 class="section-title" data-edit="shop.heading">The collection</h1>
+<meta name="description" content="…" data-edit="shop.metaDescription" data-edit-attr="content">
+```
+
+**A mark may only go on an element whose content is plain text** — no nested
+elements, not even an `<em>`. That invariant is what lets the rewriter find the
+closing tag without parsing HTML, and it is checked by the tests rather than
+trusted. Where the page needs markup around an editable string, the mark goes on
+a `<span>` inside it wrapping only the words — see the footer, whose year is
+filled in by script.
+
+`js/copy.js` is **generated**. Every save rewrites it whole, in one fixed shape,
+which is what lets the server read it back. Editing it by hand is fine; changing
+its shape is not.
+
+### The strings you cannot point at
+
+A page title, a search-result description, the message shown when the shop fails
+to load. All copy, none of it on screen when things are going well. **More copy**
+in the save bar opens a panel listing them, grouped by what they are for. A string
+that is both on the page and in the panel stays in step in both directions.
+
+### Environment variables it needs
+
+| Variable | What it is |
+|---|---|
+| `MERLOW_ADMIN_PASSWORD` | what you type at `/admin/signin` |
+| `MERLOW_SESSION_SECRET` | random, 32+ characters, signs the session cookie |
+| `GITHUB_TOKEN` | fine-grained PAT on `CLIFTONFLACK/merlowunfiltered` with **Contents: read and write** |
+
+Optional: `MERLOW_CONTENT_REPO` and `MERLOW_CONTENT_BRANCH` override the defaults
+`CLIFTONFLACK/merlowunfiltered` and `main`.
+
+Miss any of the three and the editor says so plainly rather than half-working —
+`/admin` checks all of them, by using them, before you have typed anything.
+
+### The one way this can lose work
+
+The editor reads the files out of the running deployment. If that deployment was
+built from something other than the head of `main` — a `vercel --prod` from a
+dirty tree, say — then committing those files would carry the older ones forward
+over the newer and undo them. So `/admin` and every save check the deployed
+commit against the branch head, and refuse rather than guess. **Deploy from a
+clean, pushed tree and this never arises.**
+
 ## Tests
 
 ```
-npm test                              # keying, and product-name cleanup
+npm test                              # keying, product names, and the content editor
 node test/deploy-check.mjs <url>      # against a real deployment
 ```
+
+`test/content-editor.test.js` covers the editor. Two of its cases are the ones that
+matter: *every string the schema names is in one of the real files* goes red the
+moment a `data-edit` mark is deleted from the markup, and *a commit is blobs, then
+one tree, then one commit, then one move of the branch* goes red if the branch is
+ever moved with `force` or the tree loses its `base_tree` — the two mistakes that
+would quietly destroy work. Both were checked by breaking them on purpose.
 
 `test/mockup.test.js` and `test/printful.test.js` use Node's own test runner — no framework.
 `test/deploy-check.mjs` runs against a preview or production URL and asserts the two things

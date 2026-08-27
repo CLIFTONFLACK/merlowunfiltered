@@ -13,7 +13,14 @@
    ─────────────────────────────────────────────────────────── */
 
 (function () {
-  const { escapeHtml, money, mockup, productTitle, swatchColor } = window.Merlow;
+  const { escapeHtml, money, mockup, productTitle, swatchColor, copy } = window.Merlow;
+
+  /* Strings this file prints come from js/copy.js, and the ones that are on
+     screen in the ordinary case carry data-edit so they can be reworded in
+     place at /admin/edit. The ones that appear only mid-choice or when Printful
+     is short of something do not: you cannot click what is not there, so those
+     are edited from the panel instead. See lib/copy.js. */
+  const editable = (key) => `<span data-edit="${key}">${escapeHtml(copy(key))}</span>`;
 
   const state = { product: null, color: null, size: null };
 
@@ -65,7 +72,7 @@
             ${p.images.map((src, n) => `
               <li>
                 <button type="button" class="product__thumb${n === 0 ? ' is-on' : ''}" data-image="${escapeHtml(mockup(src))}"
-                        aria-label="View image ${n + 1} of ${p.images.length}">
+                        aria-label="${escapeHtml(copy('product.imageNav', { n: n + 1, total: p.images.length }))}">
                   <img src="${escapeHtml(mockup(src, 200))}" alt="" width="200" height="200" loading="lazy" decoding="async">
                 </button>
               </li>`).join('')}
@@ -78,7 +85,7 @@
     if (chosen) return escapeHtml(money(chosen.price, chosen.currency));
     if (p.priceFrom == null) return '';
     return p.priceTo > p.priceFrom
-      ? `<span class="shop__price-from">from</span>${escapeHtml(money(p.priceFrom, p.currency))}`
+      ? `<span class="shop__price-from">${editable('product.priceFrom')}</span>${escapeHtml(money(p.priceFrom, p.currency))}`
       : escapeHtml(money(p.priceFrom, p.currency));
   }
 
@@ -87,7 +94,7 @@
 
     const colors = p.colors.length ? `
       <div class="product__option">
-        <span class="product__option-label" id="colorLabel">Colour${state.color ? ` <b>${escapeHtml(state.color)}</b>` : ''}</span>
+        <span class="product__option-label" id="colorLabel">${editable('product.colour')}${state.color ? ` <b>${escapeHtml(state.color)}</b>` : ''}</span>
         <div class="product__swatches" role="radiogroup" aria-labelledby="colorLabel">
           ${p.colors.map((c) => `
             <button type="button" role="radio" aria-checked="${state.color === c.name}"
@@ -101,7 +108,7 @@
 
     const sizes = p.sizes.length ? `
       <div class="product__option">
-        <span class="product__option-label" id="sizeLabel">Size</span>
+        <span class="product__option-label" id="sizeLabel">${editable('product.size')}</span>
         <div class="product__sizes" role="radiogroup" aria-labelledby="sizeLabel">
           ${p.sizes.map((s) => {
             const ok = sizeAvailable(s);
@@ -109,7 +116,7 @@
             <button type="button" role="radio" aria-checked="${state.size === s}"
                     class="product__size${state.size === s ? ' is-on' : ''}"
                     data-size="${escapeHtml(s)}" ${ok ? '' : 'disabled'}
-                    ${ok ? '' : 'title="Not available in this colour"'}>${escapeHtml(s)}</button>`;
+                    ${ok ? '' : `title="${escapeHtml(copy('product.sizeUnavailable'))}"`}>${escapeHtml(s)}</button>`;
           }).join('')}
         </div>
       </div>` : '';
@@ -119,9 +126,9 @@
 
   function detailsHtml(p) {
     const spec = [
-      p.brand && `<div><dt>Brand</dt><dd>${escapeHtml(p.brand)}</dd></div>`,
-      p.model && `<div><dt>Model</dt><dd>${escapeHtml(p.model)}</dd></div>`,
-      p.type && `<div><dt>Type</dt><dd>${escapeHtml(p.type)}</dd></div>`,
+      p.brand && `<div><dt>${editable('product.specBrand')}</dt><dd>${escapeHtml(p.brand)}</dd></div>`,
+      p.model && `<div><dt>${editable('product.specModel')}</dt><dd>${escapeHtml(p.model)}</dd></div>`,
+      p.type && `<div><dt>${editable('product.specType')}</dt><dd>${escapeHtml(p.type)}</dd></div>`,
     ].filter(Boolean).join('');
 
     return `
@@ -160,8 +167,8 @@
        colour was preselected leaves you looking for a second choice that
        isn't there. */
     const missing = [
-      p.colors.length && !state.color ? 'a colour' : null,
-      p.sizes.length && !state.size ? 'a size' : null,
+      p.colors.length && !state.color ? copy('product.missingColour') : null,
+      p.sizes.length && !state.size ? copy('product.missingSize') : null,
     ].filter(Boolean);
 
     document.getElementById('product').innerHTML = `
@@ -173,10 +180,12 @@
           ${optionsHtml(p)}
           ${p.variants.length ? `
             <button class="btn btn--primary product__add" id="addToCart" type="button" ${needsChoice ? 'disabled' : ''}>
-              ${needsChoice ? `Choose ${missing.join(' and ')}` : 'Add to cart'}
+              ${needsChoice
+                ? escapeHtml(copy('product.choose', { what: missing.join(` ${copy('product.missingJoin')} `) }))
+                : editable('product.add')}
             </button>
-            <p class="product__note">Made to order, usually printed within 3–7 days. Postage is worked out from your country in the cart.</p>
-          ` : '<p class="shop__note">Currently unavailable</p>'}
+            <p class="product__note">${editable('product.note')}</p>
+          ` : `<p class="shop__note">${escapeHtml(copy('product.unavailable'))}</p>`}
           ${detailsHtml(p)}
         </div>
       </div>`;

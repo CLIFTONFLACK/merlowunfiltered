@@ -42,6 +42,26 @@ window.Merlow = (function () {
     }[c]));
   }
 
+  /* Copy that a script prints, rather than copy that sits in the markup, lives
+     in js/copy.js — one flat table of dotted keys, rewritten whole by
+     /admin/edit. See lib/copy.js for why the two are kept apart.
+
+     js/copy.js is loaded before this file by every page that needs it, so a
+     missing key is a mistake in the schema and not a race. Falling back to the
+     key itself is deliberate: "product.add" printed on a button is a bug
+     somebody reports in a minute, where an empty button is one nobody can
+     describe. */
+  function copy(key, vars) {
+    const table = window.MERLOW_COPY || {};
+    let out = Object.prototype.hasOwnProperty.call(table, key) ? table[key] : key;
+    if (vars) {
+      Object.keys(vars).forEach((name) => {
+        out = out.split(`{${name}}`).join(vars[name]);
+      });
+    }
+    return out;
+  }
+
   /* Every product mockup on the site goes through /api/mockup, which serves it
      with the backdrop taken off. Printful cuts out most of them already but
      not all, and a white box on this page is loud. Anything not from Printful
@@ -59,7 +79,9 @@ window.Merlow = (function () {
     const low = Math.min(...variants.map((v) => v.price));
     const high = Math.max(...variants.map((v) => v.price));
     const amount = escapeHtml(money(low, variants[0].currency));
-    return high > low ? `<span class="shop__price-from">from</span>${amount}` : amount;
+    return high > low
+      ? `<span class="shop__price-from">${escapeHtml(copy('product.priceFrom'))}</span>${amount}`
+      : amount;
   }
 
   function productHref(product) {
@@ -497,6 +519,7 @@ window.Merlow = (function () {
     render,
     count,
     money,
+    copy,
     escapeHtml,
     mockup,
     priceLabel,

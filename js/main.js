@@ -18,29 +18,26 @@ const CHANNEL_URL = 'https://www.youtube.com/@MerlowHQ';
 const PLAYLIST_URL = 'https://www.youtube.com/playlist?list=PLEjCGD4tGVKQ';
 
 const VIDEOS = {
-  featured:   '-XMXp3gifag',   // the Marcus Whitefield cut, as the album's calling card
+  featured:   'A3Bn3vJVUB8',   // the Caldwell cut, as the album's calling card
 
   'track-01': 'A3Bn3vJVUB8',   // Caldwell            — Indie UK
-  'track-02': '-XMXp3gifag',   // Marcus Whitefield   — Indie UK
-  'track-03': 'meuu3SeXyaE',   // Clara.B.            — A Capella
-  'track-04': '_HOLLTDt3co',   // Ellison Sisters     — A Capella
-  'track-05': 'zLWAso5D7yc',   // Edith Vale          — Country Rock
-  'track-06': 'lgwP56wD8so',   // Ashworth            — Folk Anthem
-  'track-07': 'SYB_n0iSxng',   // Rachel Heart        — Folk Anthem
-  'track-08': 'bV3C4U2hQcQ',   // Darius Kohan        — OldSkool Rap
-  'track-09': 'ZxZVDCCGOG4',   // Ben-D               — OldSkool Rap
-  'track-10': 'I6I3zKhUOaE',   // The Hallorans       — Power Pop
-  'track-11': '7u3vxmxrJMM',   // Five Roses          — Power Pop
-  'track-12': 'jNuNULtmwAs',   // The Nazarians       — Rap Funk
-  'track-13': 'MD9uI8PYPf0',   // Oko Funk Syndicate  — Rap Funk
-  'track-14': 'ZuS1k-Bj0j8',   // Mansour Drive       — Rock Anthem
-  'track-15': 'VurVtUUdo_s',   // Black Rosen         — Rock Anthem
+  'track-02': 'meuu3SeXyaE',   // Clara.B.            — A Capella
+  'track-03': '_HOLLTDt3co',   // Ellison Sisters     — A Capella
+  'track-04': 'zLWAso5D7yc',   // Edith Vale          — Country Rock
+  'track-05': 'lgwP56wD8so',   // Ashworth            — Folk Anthem
+  'track-06': 'SYB_n0iSxng',   // Rachel Heart        — Folk Anthem
+  'track-07': 'bV3C4U2hQcQ',   // Darius Kohan        — OldSkool Rap
+  'track-08': 'ZxZVDCCGOG4',   // Ben-D               — OldSkool Rap
+  'track-09': 'I6I3zKhUOaE',   // The Hallorans       — Power Pop
+  'track-10': '7u3vxmxrJMM',   // Five Roses          — Power Pop
+  'track-11': 'jNuNULtmwAs',   // The Nazarians       — Rap Funk
+  'track-12': 'ZuS1k-Bj0j8',   // Mansour Drive       — Rock Anthem
+  'track-13': 'VurVtUUdo_s',   // Black Rosen         — Rock Anthem
 };
 
 /* The record. Order = tracklist order. */
 const TRACKS = [
   { artist: 'Caldwell',           genre: 'Indie UK' },
-  { artist: 'Marcus Whitefield',  genre: 'Indie UK' },
   { artist: 'Clara.B.',           genre: 'A Capella' },
   { artist: 'Ellison Sisters',    genre: 'A Capella' },
   { artist: 'Edith Vale',         genre: 'Country Rock' },
@@ -51,7 +48,6 @@ const TRACKS = [
   { artist: 'The Hallorans',      genre: 'Power Pop' },
   { artist: 'Five Roses',         genre: 'Power Pop' },
   { artist: 'The Nazarians',      genre: 'Rap Funk' },
-  { artist: 'Oko Funk Syndicate', genre: 'Rap Funk' },
   { artist: 'Mansour Drive',      genre: 'Rock Anthem' },
   { artist: 'Black Rosen',        genre: 'Rock Anthem' },
 ];

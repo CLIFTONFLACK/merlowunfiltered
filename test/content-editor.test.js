@@ -100,20 +100,64 @@ test('no key is claimed by two files', () => {
 
 /* ── Sanitising ──────────────────────────────────────────────────────────── */
 
+test('the icon sprite is byte-identical in all three pages', () => {
+  /* There is no build step to share a partial between static pages, so the
+     sprite is duplicated on purpose. Duplication is fine; DRIFT is not, and
+     one page quietly ending up with an older Instagram glyph than the other
+     two is the failure this exists to make impossible to ship. */
+  const siteFiles = require('../lib/site-files.js');
+  const sprites = ['index.html', 'shop.html', 'product.html'].map((file) => {
+    const found = /<svg class="sprite"[\s\S]*?<\/svg>/.exec(siteFiles.read(file));
+    assert.ok(found, `${file} has no sprite`);
+    return found[0];
+  });
+  assert.equal(sprites[1], sprites[0], 'shop.html has drifted from index.html');
+  assert.equal(sprites[2], sprites[0], 'product.html has drifted from index.html');
+  assert.equal((sprites[0].match(/<symbol /g) || []).length, 4);
+});
+
+test('every <use> in every page points at a symbol that page defines', () => {
+  // A <use> whose target is missing renders nothing at all — the same as a
+  // button with no icon, and just as silent.
+  const siteFiles = require('../lib/site-files.js');
+  for (const file of ['index.html', 'shop.html', 'product.html']) {
+    const html = siteFiles.read(file);
+    const defined = new Set([...html.matchAll(/<symbol id="([^"]+)"/g)].map((m) => m[1]));
+    const used = [...html.matchAll(/<use href="#([^"]+)"/g)].map((m) => m[1]);
+    assert.ok(used.length > 0, `${file} references no icons at all`);
+    for (const id of used) assert.ok(defined.has(id), `${file}: <use href="#${id}"> has no symbol`);
+  }
+});
+
 test('a key on more than one element points everywhere at the same thing', () => {
   /* social.* is deliberately on two elements each — the hero button and the
      footer button — so that one edit moves both. readValues takes the last one
      it sees, so if the two ever disagreed the editor would silently show one
      and the page would show the other. */
   const siteFiles = require('../lib/site-files.js');
+  const across = new Map();                        // key -> "value (first file it was seen in)"
+
   for (const file of ['index.html', 'shop.html', 'product.html']) {
-    const byKey = new Map();
     for (const mark of pageEdit.markers(siteFiles.read(file))) {
-      if (byKey.has(mark.key)) {
-        assert.equal(mark.value, byKey.get(mark.key), `${file}: ${mark.key} has two different values`);
+      if (across.has(mark.key)) {
+        const [value, seenIn] = across.get(mark.key);
+        assert.equal(mark.value, value, `${mark.key} differs between ${seenIn} and ${file}`);
+      } else {
+        across.set(mark.key, [mark.value, file]);
       }
-      byKey.set(mark.key, mark.value);
     }
+  }
+
+  // And the four destinations really are in all three files, or the check above
+  // passed by never comparing anything.
+  const social = ['social.spotify', 'social.youtube', 'social.instagram', 'social.tiktok'];
+  for (const key of social) {
+    const entry = copy.BY_KEY.get(key);
+    assert.deepEqual(copy.filesOf(entry).sort(), ['index.html', 'product.html', 'shop.html']);
+    const count = ['index.html', 'shop.html', 'product.html']
+      .map((f) => (siteFiles.read(f).match(new RegExp(`data-edit="${key}"`, 'g')) || []).length)
+      .reduce((a, b) => a + b, 0);
+    assert.equal(count, 4, `${key} is marked ${count} times, expected 4`);
   }
 });
 

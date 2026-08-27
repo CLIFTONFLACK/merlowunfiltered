@@ -1166,6 +1166,11 @@ a { color: inherit; }
 }
 .pagehead__inner {
   display: flex;
+  /* Wraps rather than squeezes. The wordmark, two nav links and four 48px
+     buttons come to more than 375px, so on a phone the buttons take a second
+     row instead of anything being shrunk below a thumb or pushed off the
+     edge. The header is not sticky, so a taller one costs nothing. */
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
@@ -1184,6 +1189,18 @@ a { color: inherit; }
 .pagehead__nav a { color: var(--ash); text-decoration: none; transition: color 0.25s var(--ease); }
 .pagehead__nav a:hover,
 .pagehead__nav a[aria-current] { color: var(--bone); }
+
+/* ── social row in the shop header ───────────────
+   The same four buttons as the hero and the footer, in the same treatment.
+   No translucent ground here: the header is solid --ink, so there is nothing
+   to see through and the plain .social styling is right as it is. */
+.pagehead__social { margin-left: auto; }
+
+@media (max-width: 560px) {
+  /* Once it has wrapped, the row is the whole of its line, so centre it
+     rather than leaving it hanging off the right. */
+  .pagehead__social { margin-left: 0; width: 100%; justify-content: center; }
+}
 
 .shop--page { background: var(--ink); border-top: 0; }
 .shop--page .section-title { margin-bottom: 1rem; }

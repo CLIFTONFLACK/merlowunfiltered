@@ -310,12 +310,23 @@ later. That means every edit has a diff, an author and a revert, and it means
 | `product.html` | the product page's title, meta description, nav, crumb, footer |
 | `js/copy.js` | everything a script prints — the button, the option labels, the made-to-order note, the empty and error states, the spec headings |
 
-The four social destinations are editable too, from the panel. Each is **one
-key on two elements** — the button at the top of the hero and the matching one
-in the footer — so one edit moves both. Which platforms exist is not editable:
-that is an icon and a piece of markup, not copy. A URL field is the one place
-the editor validates rather than merely trims: `http` and `https` only, checked
-on the parsed scheme, so a `javascript:` href cannot be typed into the page.
+The four social destinations are editable too, from the panel on any of the
+three pages. Each is **one key on four elements across three files** — the hero
+button and the footer button on the home page, and the header button on the
+shop and the product template — so one edit rewrites all four. Four separate
+keys would let the shop's Instagram link drift from the home page's and nobody
+would notice for months.
+
+Which platforms exist is not editable: that is an icon and a piece of markup,
+not copy. A URL field is the one place the editor validates rather than merely
+trims: `http` and `https` only, decided on the parsed scheme, so a `javascript:`
+href cannot be typed into the page.
+
+**The icon sprite is duplicated in all three pages on purpose.** There is no
+build step to share a partial between static files. Duplication is fine; drift
+is not, so a test asserts the three copies are byte-identical and that every
+`<use>` resolves to a symbol the same page defines — a `<use>` pointing at
+nothing renders nothing, which looks exactly like a button with no icon.
 
 **Not** editable here, on purpose:
 

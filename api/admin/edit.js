@@ -90,7 +90,7 @@ module.exports = async (req, res) => {
     if (!entry.group) return false;
     return entry.where === 'js/copy.js'
       ? entry.key.split('.')[0] === target.prefix
-      : entry.where === target.file;
+      : copy.filesOf(entry).includes(target.file);
   });
 
   const ctx = {

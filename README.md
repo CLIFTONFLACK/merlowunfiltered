@@ -310,6 +310,13 @@ later. That means every edit has a diff, an author and a revert, and it means
 | `product.html` | the product page's title, meta description, nav, crumb, footer |
 | `js/copy.js` | everything a script prints — the button, the option labels, the made-to-order note, the empty and error states, the spec headings |
 
+The four social destinations are editable too, from the panel. Each is **one
+key on two elements** — the button at the top of the hero and the matching one
+in the footer — so one edit moves both. Which platforms exist is not editable:
+that is an icon and a piece of markup, not copy. A URL field is the one place
+the editor validates rather than merely trims: `http` and `https` only, checked
+on the parsed scheme, so a `javascript:` href cannot be typed into the page.
+
 **Not** editable here, on purpose:
 
 - **Product names, prices and photographs.** Printful's, not ours.

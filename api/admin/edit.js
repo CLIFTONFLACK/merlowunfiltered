@@ -76,13 +76,22 @@ module.exports = async (req, res) => {
 
   const source = siteFiles.read(target.file);
 
-  /* The panel lists only the strings belonging to the page being edited. All
-     37 values are still sent, because a save posts the whole document and the
-     server decides what changed — but a panel offering to reword the product
-     button while you are looking at the shop is a panel nobody trusts. */
-  const fields = copy.SCHEMA.filter(
-    (entry) => entry.group && entry.key.split('.')[0] === target.prefix
-  );
+  /* The panel lists only what belongs to the page being edited. Every value is
+     still sent, because a save posts the whole document and the server decides
+     what changed — but a panel offering to reword the product button while you
+     are looking at the shop is a panel nobody trusts.
+
+     Belonging is decided by the FILE a string lives in, not by its key prefix.
+     Prefix was the first rule and it was wrong: social.* lives in index.html
+     and so belongs to the home page, but does not begin with "home", so the
+     whole group silently vanished from the one page that has the buttons on
+     it. Only js/copy.js needs the prefix, because one file serves every page. */
+  const fields = copy.SCHEMA.filter((entry) => {
+    if (!entry.group) return false;
+    return entry.where === 'js/copy.js'
+      ? entry.key.split('.')[0] === target.prefix
+      : entry.where === target.file;
+  });
 
   const ctx = {
     pageLabel: target.label,

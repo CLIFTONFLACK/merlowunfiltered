@@ -3,7 +3,7 @@
   "trailingSlash": false,
   "functions": {
     "api/admin/*.js": {
-      "includeFiles": "{shop.html,product.html,js/copy.js}"
+      "includeFiles": "{index.html,shop.html,product.html,js/copy.js}"
     }
   },
   "rewrites": [

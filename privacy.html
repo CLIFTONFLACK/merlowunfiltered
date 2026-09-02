@@ -112,6 +112,9 @@
 </footer>
 
 <script src="/js/reveal.js"></script>
-<script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+<script>
+  window.MerlowReveal.init();
+  document.getElementById('year').textContent = new Date().getFullYear();
+</script>
 </body>
 </html>

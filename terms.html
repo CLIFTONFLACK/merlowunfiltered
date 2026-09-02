@@ -3,19 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- data-edit marks a string that /admin/edit may change, and marks where it
-     lives so a save can write it back. A mark may only go on an element whose
-     content is plain text — see lib/page-edit.js. -->
-<title data-edit="shop.pageTitle">Shop — MERLOW: UNFILTERED</title>
-<meta name="description" content="The MERLOW collection. Printed and stitched heavy, made to order." data-edit="shop.metaDescription" data-edit-attr="content">
+<title data-edit="terms.pageTitle">Terms of Use — MERLOW: UNFILTERED</title>
+<meta name="description" content="Terms of use for merlow.space." data-edit="terms.metaDescription" data-edit-attr="content">
 <meta name="theme-color" content="#0A0B0D">
+<meta name="robots" content="noindex">
 <link rel="icon" href="/media/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="icon" href="/media/favicon.png" sizes="256x256" type="image/png">
 <link rel="apple-touch-icon" href="/media/favicon-180.png">
 
 <meta property="og:type" content="website">
-<meta property="og:title" content="Shop — MERLOW: UNFILTERED" data-edit="shop.ogTitle" data-edit-attr="content">
-<meta property="og:description" content="The MERLOW collection. Printed and stitched heavy, made to order." data-edit="shop.ogDescription" data-edit-attr="content">
+<meta property="og:title" content="Terms of Use — MERLOW: UNFILTERED" data-edit="terms.ogTitle" data-edit-attr="content">
+<meta property="og:description" content="Terms of use for merlow.space." data-edit="terms.ogDescription" data-edit-attr="content">
 <meta property="og:image" content="/media/cover.jpg">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,9 +23,8 @@
 </head>
 <body class="page">
 
-<!-- Identical to the block in index.html and in the other page. There is no
-     build step to share it, so it is duplicated on purpose and a test
-     asserts the three copies match rather than trusting that they do. -->
+<!-- Identical to the block in index.html and the other pages. There is no
+     build step to share it, so it is duplicated on purpose. -->
 <svg class="sprite" aria-hidden="true" focusable="false">
   <symbol id="ic-spotify" viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.52 17.34c-.24.36-.66.48-1.02.24-2.82-1.74-6.36-2.1-10.56-1.14-.42.12-.78-.18-.9-.54-.12-.42.18-.78.54-.9 4.56-1.02 8.52-.6 11.64 1.32.42.18.48.66.3 1.02zm1.44-3.3c-.3.42-.84.6-1.26.3-3.24-1.98-8.16-2.58-11.94-1.38-.48.12-1.02-.12-1.14-.6-.12-.48.12-1.02.6-1.14 4.38-1.32 9.78-.66 13.5 1.62.36.18.54.78.24 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.3c-.6.18-1.2-.18-1.38-.72-.18-.6.18-1.2.72-1.38 4.26-1.26 11.28-1.02 15.72 1.62.54.3.72 1.02.42 1.56-.3.42-1.02.6-1.56.3z"/></symbol>
   <symbol id="ic-youtube" viewBox="0 0 24 24"><path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.5 3.55 12 3.55 12 3.55s-7.5 0-9.38.5A3.02 3.02 0 0 0 .5 6.19C0 8.08 0 12 0 12s0 3.92.5 5.81a3.02 3.02 0 0 0 2.12 2.14c1.88.5 9.38.5 9.38.5s7.5 0 9.38-.5a3.02 3.02 0 0 0 2.12-2.14C24 15.92 24 12 24 12s0-3.92-.5-5.81zM9.55 15.57V8.43L15.82 12l-6.27 3.57z"/></symbol>
@@ -41,9 +38,9 @@
     <a class="pagehead__home" href="/">
       <img src="/media/merlow-wordmark.png" alt="MERLOW" width="640" height="150">
     </a>
-    <nav class="pagehead__nav" aria-label="Shop">
-      <a href="/#story" data-edit="shop.navRecord">The SONG</a>
-      <a href="/shop" aria-current="page" data-edit="shop.navShop">Shop</a>
+    <nav class="pagehead__nav" aria-label="Terms of use">
+      <a href="/#story" data-edit="terms.navRecord">The SONG</a>
+      <a href="/shop" data-edit="terms.navShop">Shop</a>
     </nav>
     <ul class="social pagehead__social">
       <li><a href="https://open.spotify.com/playlist/1HEwrHLTnNiqLB3t2lrAqh" target="_blank" rel="noopener" aria-label="MERLOW on Spotify" data-edit="social.spotify" data-edit-attr="href"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#ic-spotify"></use></svg></a></li>
@@ -56,31 +53,51 @@
 
 <main>
   <section class="shop shop--page">
-    <div class="wrap">
-      <p class="eyebrow reveal" data-edit="shop.eyebrow">Merchandise</p>
-      <h1 class="section-title reveal" data-edit="shop.heading">The collection</h1>
-      <p class="section-lede reveal" data-edit="shop.lede">Every piece carries the mark — stitched into denim, embroidered onto a cap, sunk into a jacket built to last a winter. Posted to the UK, Ireland, Europe, North America and Australia.</p>
+    <div class="wrap legal">
+      <p class="eyebrow reveal" data-edit="terms.eyebrow">Legal</p>
+      <h1 class="section-title reveal" data-edit="terms.heading">Terms of use</h1>
+      <p class="section-lede reveal" data-edit="terms.lede">Last updated <span data-edit="terms.updated">2 September 2026</span>. Using merlow.space means you accept the terms below.</p>
 
-      <ul class="shop__grid" id="shopGrid" aria-live="polite">
-        <li class="shop__status reveal" data-edit="shop.loading">Loading the shop&hellip;</li>
-      </ul>
+      <div class="legal__body reveal">
+        <h2 data-edit="terms.s1h">1. Who this is</h2>
+        <p data-edit="terms.s1p">merlow.space (the &ldquo;Site&rdquo;) is operated by MERLOW (&ldquo;MERLOW&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;) to present the UNFILTERED record and sell related merchandise. Contact: <a href="mailto:hello@merlow.space" data-edit="terms.contactEmail">hello@merlow.space</a>.</p>
+
+        <h2 data-edit="terms.s2h">2. Using the Site</h2>
+        <p data-edit="terms.s2p">You may browse the Site, listen to embedded tracks, and buy merchandise for personal, non-commercial use. You agree not to: scrape or bulk-harvest content; interfere with the Site&rsquo;s operation or security; impersonate anyone; or use the Site for anything unlawful.</p>
+
+        <h2 data-edit="terms.s3h">3. Content and intellectual property</h2>
+        <p data-edit="terms.s3p">The UNFILTERED recordings, artwork, video, the MERLOW name and mark, and the Site&rsquo;s design and code belong to MERLOW and its collaborators and licensors, and are protected by copyright and trademark law. Nothing on the Site grants you a license to reproduce, redistribute, or create derivative works from that content except as the platforms it&rsquo;s embedded from (Spotify, YouTube, Instagram, TikTok) already allow through their own sharing features.</p>
+
+        <h2 data-edit="terms.s4h">4. Merchandise orders</h2>
+        <p data-edit="terms.s4p">Merchandise is printed and shipped to order by our fulfillment partner, Printful, once an order is placed. Payment is processed by Stripe; we never see or store your full card details. Prices, shipping costs, and delivery estimates are shown at checkout and may vary by destination. Because each item is made to order, returns and exchanges are limited to items that arrive damaged, defective, or materially different from what you ordered &mdash; contact us within 14 days of delivery to arrange one.</p>
+
+        <h2 data-edit="terms.s5h">5. Mailing list</h2>
+        <p data-edit="terms.s5p">If you submit your email through the mailing-list form, we&rsquo;ll use it to send you updates about MERLOW. You can unsubscribe at any time using the link in any message we send.</p>
+
+        <h2 data-edit="terms.s6h">6. Third-party links and embeds</h2>
+        <p data-edit="terms.s6p">The Site links to and embeds content from Spotify, YouTube, Instagram, and TikTok. Those services operate under their own terms and privacy policies, which we don&rsquo;t control and aren&rsquo;t responsible for.</p>
+
+        <h2 data-edit="terms.s7h">7. No warranty, limited liability</h2>
+        <p data-edit="terms.s7p">The Site is provided &ldquo;as is,&rdquo; without warranties of any kind. To the extent the law allows, MERLOW is not liable for indirect, incidental, or consequential damages arising from your use of the Site.</p>
+
+        <h2 data-edit="terms.s8h">8. Changes</h2>
+        <p data-edit="terms.s8p">We may update these terms as the Site changes. The date at the top of this page shows when it was last revised. Continuing to use the Site after an update means you accept the revised terms.</p>
+
+        <h2 data-edit="terms.s9h">9. Privacy</h2>
+        <p data-edit="terms.s9p">See the <a href="/privacy">Privacy Policy</a> for how we handle your data.</p>
+      </div>
     </div>
   </section>
 </main>
 
 <footer class="pagefoot">
   <div class="wrap pagefoot__inner">
-    <!-- The mark goes on a span around the words, not on the <p>: the year is
-         filled in by script and a mark that swallowed the whole paragraph
-         would overwrite it on the first save. -->
-    <p>&copy; <span id="year"></span> <span data-edit="shop.footCredit">MERLOW. Made to order by Printful.</span> &middot; <a href="/terms" data-edit="shop.footTerms">Terms</a> &middot; <a href="/privacy" data-edit="shop.footPrivacy">Privacy</a></p>
-    <a href="/" data-edit="shop.footBack">Back to the record</a>
+    <p>&copy; <span id="year"></span> <span data-edit="terms.footCredit">MERLOW. All rights reserved.</span></p>
+    <p><a href="/privacy" data-edit="terms.footPrivacy">Privacy policy</a> &middot; <a href="/" data-edit="terms.footBack">Back to the record</a></p>
   </div>
 </footer>
 
 <script src="/js/reveal.js"></script>
-<script src="/js/copy.js"></script>
-<script src="/js/cart.js"></script>
-<script src="/js/shop.js"></script>
+<script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 </body>
 </html>

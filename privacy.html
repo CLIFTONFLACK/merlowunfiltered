@@ -3,19 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- data-edit marks a string that /admin/edit may change, and marks where it
-     lives so a save can write it back. A mark may only go on an element whose
-     content is plain text — see lib/page-edit.js. -->
-<title data-edit="shop.pageTitle">Shop — MERLOW: UNFILTERED</title>
-<meta name="description" content="The MERLOW collection. Printed and stitched heavy, made to order." data-edit="shop.metaDescription" data-edit-attr="content">
+<title data-edit="privacy.pageTitle">Privacy Policy — MERLOW: UNFILTERED</title>
+<meta name="description" content="Privacy policy for merlow.space." data-edit="privacy.metaDescription" data-edit-attr="content">
 <meta name="theme-color" content="#0A0B0D">
+<meta name="robots" content="noindex">
 <link rel="icon" href="/media/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="icon" href="/media/favicon.png" sizes="256x256" type="image/png">
 <link rel="apple-touch-icon" href="/media/favicon-180.png">
 
 <meta property="og:type" content="website">
-<meta property="og:title" content="Shop — MERLOW: UNFILTERED" data-edit="shop.ogTitle" data-edit-attr="content">
-<meta property="og:description" content="The MERLOW collection. Printed and stitched heavy, made to order." data-edit="shop.ogDescription" data-edit-attr="content">
+<meta property="og:title" content="Privacy Policy — MERLOW: UNFILTERED" data-edit="privacy.ogTitle" data-edit-attr="content">
+<meta property="og:description" content="Privacy policy for merlow.space." data-edit="privacy.ogDescription" data-edit-attr="content">
 <meta property="og:image" content="/media/cover.jpg">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,9 +23,8 @@
 </head>
 <body class="page">
 
-<!-- Identical to the block in index.html and in the other page. There is no
-     build step to share it, so it is duplicated on purpose and a test
-     asserts the three copies match rather than trusting that they do. -->
+<!-- Identical to the block in index.html and the other pages. There is no
+     build step to share it, so it is duplicated on purpose. -->
 <svg class="sprite" aria-hidden="true" focusable="false">
   <symbol id="ic-spotify" viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.52 17.34c-.24.36-.66.48-1.02.24-2.82-1.74-6.36-2.1-10.56-1.14-.42.12-.78-.18-.9-.54-.12-.42.18-.78.54-.9 4.56-1.02 8.52-.6 11.64 1.32.42.18.48.66.3 1.02zm1.44-3.3c-.3.42-.84.6-1.26.3-3.24-1.98-8.16-2.58-11.94-1.38-.48.12-1.02-.12-1.14-.6-.12-.48.12-1.02.6-1.14 4.38-1.32 9.78-.66 13.5 1.62.36.18.54.78.24 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.3c-.6.18-1.2-.18-1.38-.72-.18-.6.18-1.2.72-1.38 4.26-1.26 11.28-1.02 15.72 1.62.54.3.72 1.02.42 1.56-.3.42-1.02.6-1.56.3z"/></symbol>
   <symbol id="ic-youtube" viewBox="0 0 24 24"><path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.5 3.55 12 3.55 12 3.55s-7.5 0-9.38.5A3.02 3.02 0 0 0 .5 6.19C0 8.08 0 12 0 12s0 3.92.5 5.81a3.02 3.02 0 0 0 2.12 2.14c1.88.5 9.38.5 9.38.5s7.5 0 9.38-.5a3.02 3.02 0 0 0 2.12-2.14C24 15.92 24 12 24 12s0-3.92-.5-5.81zM9.55 15.57V8.43L15.82 12l-6.27 3.57z"/></symbol>
@@ -41,9 +38,9 @@
     <a class="pagehead__home" href="/">
       <img src="/media/merlow-wordmark.png" alt="MERLOW" width="640" height="150">
     </a>
-    <nav class="pagehead__nav" aria-label="Shop">
-      <a href="/#story" data-edit="shop.navRecord">The SONG</a>
-      <a href="/shop" aria-current="page" data-edit="shop.navShop">Shop</a>
+    <nav class="pagehead__nav" aria-label="Privacy policy">
+      <a href="/#story" data-edit="privacy.navRecord">The SONG</a>
+      <a href="/shop" data-edit="privacy.navShop">Shop</a>
     </nav>
     <ul class="social pagehead__social">
       <li><a href="https://open.spotify.com/playlist/1HEwrHLTnNiqLB3t2lrAqh" target="_blank" rel="noopener" aria-label="MERLOW on Spotify" data-edit="social.spotify" data-edit-attr="href"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#ic-spotify"></use></svg></a></li>
@@ -56,31 +53,65 @@
 
 <main>
   <section class="shop shop--page">
-    <div class="wrap">
-      <p class="eyebrow reveal" data-edit="shop.eyebrow">Merchandise</p>
-      <h1 class="section-title reveal" data-edit="shop.heading">The collection</h1>
-      <p class="section-lede reveal" data-edit="shop.lede">Every piece carries the mark — stitched into denim, embroidered onto a cap, sunk into a jacket built to last a winter. Posted to the UK, Ireland, Europe, North America and Australia.</p>
+    <div class="wrap legal">
+      <p class="eyebrow reveal" data-edit="privacy.eyebrow">Legal</p>
+      <h1 class="section-title reveal" data-edit="privacy.heading">Privacy policy</h1>
+      <p class="section-lede reveal" data-edit="privacy.lede">Last updated <span data-edit="privacy.updated">2 September 2026</span>. This explains what merlow.space collects and why.</p>
 
-      <ul class="shop__grid" id="shopGrid" aria-live="polite">
-        <li class="shop__status reveal" data-edit="shop.loading">Loading the shop&hellip;</li>
-      </ul>
+      <div class="legal__body reveal">
+        <h2 data-edit="privacy.s1h">1. Who this is</h2>
+        <p data-edit="privacy.s1p">merlow.space is operated by MERLOW. For anything about this policy or your data, contact <a href="mailto:hello@merlow.space" data-edit="privacy.contactEmail">hello@merlow.space</a>.</p>
+
+        <h2 data-edit="privacy.s2h">2. What we collect</h2>
+        <p data-edit="privacy.s2p">We collect only what's needed to run the Site and fill orders:</p>
+        <ul>
+          <li data-edit="privacy.s2li1"><strong>Mailing list:</strong> the email address you type into the signup form, if you choose to submit it.</li>
+          <li data-edit="privacy.s2li2"><strong>Orders:</strong> your name, shipping address, and order details, collected at checkout so your order can be shipped and so Stripe can process payment. We don&rsquo;t see or store your full card number &mdash; Stripe handles that directly.</li>
+          <li data-edit="privacy.s2li3"><strong>Site verification:</strong> a verification file at the site root that proves to TikTok that we control this domain. It contains no personal data.</li>
+        </ul>
+        <p data-edit="privacy.s2p2">We do not run analytics or advertising trackers on this Site.</p>
+
+        <h2 data-edit="privacy.s3h">3. How we use it</h2>
+        <p data-edit="privacy.s3p">Order details are used to fulfill and ship your purchase and to handle any support request about it. Your email is used to send the updates you signed up for, and nothing else, unless you unsubscribe first.</p>
+
+        <h2 data-edit="privacy.s4h">4. Who we share it with</h2>
+        <p data-edit="privacy.s4p">We share data only where the order requires it:</p>
+        <ul>
+          <li data-edit="privacy.s4li1"><strong>Stripe</strong> processes payment and receives what checkout requires to do that.</li>
+          <li data-edit="privacy.s4li2"><strong>Printful</strong>, our print-on-demand fulfillment partner, receives your name and shipping address to print and ship your order.</li>
+        </ul>
+        <p data-edit="privacy.s4p2">We don&rsquo;t sell your data, and we don&rsquo;t share it with anyone else for their own marketing.</p>
+
+        <h2 data-edit="privacy.s5h">5. Cookies</h2>
+        <p data-edit="privacy.s5p">The Site itself sets no tracking or advertising cookies. A signed-in cookie is used only by the site owner&rsquo;s content editor and is never set for ordinary visitors. Embedded players from Spotify, YouTube, Instagram, and TikTok may set their own cookies under their own policies once you interact with them.</p>
+
+        <h2 data-edit="privacy.s6h">6. How long we keep it</h2>
+        <p data-edit="privacy.s6p">Order records are kept as long as needed for accounting, fulfillment, and legal requirements. Mailing-list emails are kept until you unsubscribe or ask us to delete them.</p>
+
+        <h2 data-edit="privacy.s7h">7. Your rights</h2>
+        <p data-edit="privacy.s7p">You can ask us to access, correct, or delete the personal data we hold about you, or to unsubscribe from the mailing list, by emailing <a href="mailto:hello@merlow.space" data-edit="privacy.contactEmail2">hello@merlow.space</a>. Depending on where you live, you may have additional rights under laws like the GDPR or CCPA/CPRA.</p>
+
+        <h2 data-edit="privacy.s8h">8. Children</h2>
+        <p data-edit="privacy.s8p">The Site is not directed at children under 13, and we do not knowingly collect personal data from them.</p>
+
+        <h2 data-edit="privacy.s9h">9. Changes</h2>
+        <p data-edit="privacy.s9p">We may update this policy as the Site changes. The date at the top shows when it was last revised.</p>
+
+        <h2 data-edit="privacy.s10h">10. Terms of use</h2>
+        <p data-edit="privacy.s10p">See the <a href="/terms">Terms of Use</a> for the rules that govern using this Site.</p>
+      </div>
     </div>
   </section>
 </main>
 
 <footer class="pagefoot">
   <div class="wrap pagefoot__inner">
-    <!-- The mark goes on a span around the words, not on the <p>: the year is
-         filled in by script and a mark that swallowed the whole paragraph
-         would overwrite it on the first save. -->
-    <p>&copy; <span id="year"></span> <span data-edit="shop.footCredit">MERLOW. Made to order by Printful.</span> &middot; <a href="/terms" data-edit="shop.footTerms">Terms</a> &middot; <a href="/privacy" data-edit="shop.footPrivacy">Privacy</a></p>
-    <a href="/" data-edit="shop.footBack">Back to the record</a>
+    <p>&copy; <span id="year"></span> <span data-edit="privacy.footCredit">MERLOW. All rights reserved.</span></p>
+    <p><a href="/terms" data-edit="privacy.footTerms">Terms of use</a> &middot; <a href="/" data-edit="privacy.footBack">Back to the record</a></p>
   </div>
 </footer>
 
 <script src="/js/reveal.js"></script>
-<script src="/js/copy.js"></script>
-<script src="/js/cart.js"></script>
-<script src="/js/shop.js"></script>
+<script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 </body>
 </html>

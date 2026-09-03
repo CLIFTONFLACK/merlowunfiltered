@@ -113,7 +113,7 @@ test('the icon sprite is byte-identical in all three pages', () => {
   });
   assert.equal(sprites[1], sprites[0], 'shop.html has drifted from index.html');
   assert.equal(sprites[2], sprites[0], 'product.html has drifted from index.html');
-  assert.equal((sprites[0].match(/<symbol /g) || []).length, 4);
+  assert.equal((sprites[0].match(/<symbol /g) || []).length, 5);
 });
 
 test('every <use> in every page points at a symbol that page defines', () => {

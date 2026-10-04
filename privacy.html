@@ -63,7 +63,7 @@
     <div class="wrap legal">
       <p class="eyebrow reveal" data-edit="privacy.eyebrow">Legal</p>
       <h1 class="section-title reveal" data-edit="privacy.heading">Privacy policy</h1>
-      <p class="section-lede reveal" data-edit="privacy.lede">Last updated <span data-edit="privacy.updated">2 September 2026</span>. This explains what merlow.space collects and why.</p>
+      <p class="section-lede reveal" data-edit="privacy.lede">Last updated <span data-edit="privacy.updated">4 October 2026</span>. This explains what merlow.space collects and why.</p>
 
       <div class="legal__body reveal">
         <h2 data-edit="privacy.s1h">1. Who this is</h2>
@@ -76,21 +76,22 @@
           <li data-edit="privacy.s2li2"><strong>Orders:</strong> your name, shipping address, and order details, collected at checkout so your order can be shipped and so Stripe can process payment. We don&rsquo;t see or store your full card number &mdash; Stripe handles that directly.</li>
           <li data-edit="privacy.s2li3"><strong>Site verification:</strong> a verification file at the site root that proves to TikTok that we control this domain. It contains no personal data.</li>
         </ul>
-        <p data-edit="privacy.s2p2">We do not run analytics or advertising trackers on this Site.</p>
+        <p data-edit="privacy.s2p2">If you accept analytics cookies in the cookie banner, we use Google Analytics to count visits and see which pages are used. We do not run advertising trackers on this Site.</p>
 
         <h2 data-edit="privacy.s3h">3. How we use it</h2>
         <p data-edit="privacy.s3p">Order details are used to fulfill and ship your purchase and to handle any support request about it. Your email is used to send the updates you signed up for, and nothing else, unless you unsubscribe first.</p>
 
         <h2 data-edit="privacy.s4h">4. Who we share it with</h2>
-        <p data-edit="privacy.s4p">We share data only where the order requires it:</p>
+        <p data-edit="privacy.s4p">We share data only with the services below:</p>
         <ul>
           <li data-edit="privacy.s4li1"><strong>Stripe</strong> processes payment and receives what checkout requires to do that.</li>
           <li data-edit="privacy.s4li2"><strong>Printful</strong>, our print-on-demand fulfillment partner, receives your name and shipping address to print and ship your order.</li>
+          <li data-edit="privacy.s4li3"><strong>Google Analytics</strong>, only if you accept analytics cookies, receives your IP address and information about the pages you view and the device you use, so we can count visits.</li>
         </ul>
         <p data-edit="privacy.s4p2">We don&rsquo;t sell your data, and we don&rsquo;t share it with anyone else for their own marketing.</p>
 
         <h2 data-edit="privacy.s5h">5. Cookies</h2>
-        <p data-edit="privacy.s5p">The Site itself sets no tracking or advertising cookies. A signed-in cookie is used only by the site owner&rsquo;s content editor and is never set for ordinary visitors. Embedded players from Spotify, YouTube, Instagram, and TikTok may set their own cookies under their own policies once you interact with them.</p>
+        <p data-edit="privacy.s5p">The Site sets analytics cookies (Google Analytics, named _ga and _ga_ followed by an ID) only if you accept them in the cookie banner. You can decline, or change your choice at any time with the &ldquo;Cookie settings&rdquo; button; declining removes them. Your choice is remembered on your device. The Site sets no advertising cookies. A signed-in cookie is used only by the site owner&rsquo;s content editor and is never set for ordinary visitors. Embedded players from Spotify, YouTube, Instagram, and TikTok may set their own cookies under their own policies once you interact with them.</p>
 
         <h2 data-edit="privacy.s6h">6. How long we keep it</h2>
         <p data-edit="privacy.s6p">Order records are kept as long as needed for accounting, fulfillment, and legal requirements. Mailing-list emails are kept until you unsubscribe or ask us to delete them.</p>
@@ -123,5 +124,6 @@
   window.MerlowReveal.init();
   document.getElementById('year').textContent = new Date().getFullYear();
 </script>
+<script src="/js/analytics.js" defer></script>
 </body>
 </html>

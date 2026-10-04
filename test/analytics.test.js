@@ -189,7 +189,7 @@ test('with storage blocked the banner is still dismissable and nothing is assume
   assert.equal(b.scripts.length, 1);
 });
 
-test('a stored Decline sets the off flag and clears any leftover GA cookies on load', () => {
+test('a stored Decline sets the off flag and loads nothing', () => {
   const b = fakeBrowser({ hostname: 'www.merlow.space', stored: 'denied' });
   b.win.document.cookie = '_ga=leftover';
   a.init(b.win);

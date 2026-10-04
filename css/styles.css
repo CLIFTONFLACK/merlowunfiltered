@@ -1815,6 +1815,8 @@ a { color: inherit; }
   line-height: 1.5;
   color: rgba(237, 234, 228, 0.85);
 }
+.consent__link { color: var(--bone); text-decoration: underline; text-underline-offset: 0.2em; }
+.consent__link:hover { color: #fff; }
 .consent__row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1828,7 +1830,8 @@ a { color: inherit; }
 }
 .consent__chip {
   position: fixed;
-  z-index: 60;
+  /* Below the cart overlay (50) so it never sits on the open cart's Checkout. */
+  z-index: 45;
   left: 0.75rem;
   bottom: 0.75rem;
   min-height: 2.75rem;
@@ -1846,4 +1849,5 @@ a { color: inherit; }
 .consent-chip-on { padding-bottom: 3.75rem; }
 .consent__chip:hover { color: var(--bone); border-color: var(--bone); }
 .consent__btn:focus-visible,
+.consent__link:focus-visible,
 .consent__chip:focus-visible { outline: 2px solid var(--bone); outline-offset: 2px; }

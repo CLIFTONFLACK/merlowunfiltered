@@ -154,9 +154,13 @@
       banner = el('section', 'consent');
       banner.setAttribute('aria-label', 'Cookie choice');
       banner.appendChild(el('h2', 'consent__title', 'Cookies'));
-      banner.appendChild(el('p', 'consent__text',
+      var text = el('p', 'consent__text',
         'Can we use Google Analytics cookies to see which pages people visit? No ads and nothing is sold. ' +
-        'We remember your choice on this device, and you can change it any time with the “Cookie settings” button.'));
+        'We remember your choice on this device, and you can change it any time with the “Cookie settings” button. ');
+      var more = el('a', 'consent__link', 'Privacy policy');
+      more.href = '/privacy';
+      text.appendChild(more);
+      banner.appendChild(text);
       var row = el('div', 'consent__row');
       var decline = el('button', 'btn btn--line consent__btn', 'Decline');
       var accept = el('button', 'btn btn--primary consent__btn', 'Accept');
@@ -181,9 +185,20 @@
 
     // Another tab changed the choice.
     win.addEventListener('storage', function (e) {
-      if (e.key !== KEY) return;
+      if (e.key !== null && e.key !== KEY) return; // a null key means storage was cleared
+      memory = null; // storage works (it just fired), so it is the source of truth again
       var now = read();
-      if (now) apply(now);
+      win['ga-disable-' + GA_ID] = now !== 'granted';
+      if (now) {
+        closeBanner();
+        apply(now);
+        renderChip();
+      } else {
+        // The choice was removed elsewhere: stop reporting and ask again.
+        gtagUpdate('denied');
+        clearGaCookies(doc, host);
+        openBanner();
+      }
     });
 
     var current = read();

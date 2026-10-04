@@ -89,7 +89,8 @@ function fakeBrowser({ hostname, pathname = '/', stored = null, storageThrows = 
     document: doc,
     location: { hostname, pathname },
     localStorage: storageThrows ? blocked : working,
-    addEventListener() {}
+    handlers: {},
+    addEventListener(ev, fn) { win.handlers[ev] = fn; }
   };
   const find = (cls) => {
     const out = [];
@@ -135,9 +136,12 @@ test('Accept loads gtag.js once, with consent v2 signals; Decline afterwards swi
 
   b.find('consent__chip')[0].click(); // reopen
   assert.equal(b.body.classes.has('consent-chip-on'), false, 'room released while the banner is open');
+  b.win.document.cookie = '_ga=x';
   b.find('consent__btn')[0].click(); // Decline
   assert.equal(b.store.get('gb_consent'), 'denied');
   assert.equal(b.win[OFF], true);
+  const last = Array.from(b.win.dataLayer[b.win.dataLayer.length - 1]);
+  assert.deepEqual(last, ['consent', 'update', { analytics_storage: 'denied' }], 'Google told consent was withdrawn');
   assert.equal(b.scripts.length, 1, 'no second script');
 });
 
@@ -183,4 +187,44 @@ test('with storage blocked the banner is still dismissable and nothing is assume
   b.find('consent__btn')[1].click();
   assert.equal(b.find('consent').length, 0);
   assert.equal(b.scripts.length, 1);
+});
+
+test('a stored Decline sets the off flag and clears any leftover GA cookies on load', () => {
+  const b = fakeBrowser({ hostname: 'www.merlow.space', stored: 'denied' });
+  b.win.document.cookie = '_ga=leftover';
+  a.init(b.win);
+  assert.equal(b.win[OFF], true);
+  assert.equal(b.scripts.length, 0);
+});
+
+test('the banner links to the privacy policy', () => {
+  const b = fakeBrowser({ hostname: 'www.merlow.space' });
+  a.init(b.win);
+  const link = b.find('consent__link')[0];
+  assert.equal(link.href, '/privacy');
+});
+
+test('storage cleared in another tab switches the tag off and asks again', () => {
+  const b = fakeBrowser({ hostname: 'www.merlow.space', stored: 'granted' });
+  a.init(b.win);
+  assert.equal(b.win[OFF], false);
+  assert.equal(b.find('consent').length, 0);
+  b.store.clear(); // the other tab removed the choice
+  b.win.handlers.storage({ key: null });
+  assert.equal(b.win[OFF], true);
+  assert.equal(b.find('consent').length, 1, 'banner is back');
+  const last = Array.from(b.win.dataLayer[b.win.dataLayer.length - 1]);
+  assert.deepEqual(last, ['consent', 'update', { analytics_storage: 'denied' }]);
+});
+
+test('another tab accepting loads the tag here too, and unrelated storage keys are ignored', () => {
+  const b = fakeBrowser({ hostname: 'www.merlow.space' });
+  a.init(b.win);
+  assert.equal(b.find('consent').length, 1);
+  b.win.handlers.storage({ key: 'something_else' });
+  assert.equal(b.scripts.length, 0);
+  b.store.set('gb_consent', 'granted');
+  b.win.handlers.storage({ key: 'gb_consent' });
+  assert.equal(b.scripts.length, 1);
+  assert.equal(b.find('consent').length, 0, 'banner closed');
 });
